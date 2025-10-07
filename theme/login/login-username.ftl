@@ -9,19 +9,20 @@
     <#if section = "header">
         ${msg("loginAccountTitle")}
     <#elseif section = "form">
-        <div id="kc-form">
-            <div id="kc-form-wrapper">
-                <#if realm.password>
-                    <form id="kc-form-login" class="${properties.kcFormClass!}">
-                        <div class="${properties.kcFormGroupClass!}">
-                            <#if realm.rememberMe && !usernameHidden??>
+        <div class="xiv-divider"></div>
+        <#if realm.rememberMe && !usernameHidden??>
+            <div id="kc-form">
+                <div id="kc-form-wrapper">
+                    <#if realm.password>
+                        <form id="kc-form-login" class="${properties.kcFormClass!}">
+                            <div class="${properties.kcFormGroupClass!}">
                                 <@field.checkbox name="rememberMe" label=msg("rememberMe") value=login.rememberMe?? />
-                            </#if>
-                        </div>
-                    </form>
-                </#if>
+                            </div>
+                        </form>
+                    </#if>
+                </div>
             </div>
-        </div>
+        </#if>
         <@passkeys.conditionalUIData />
 
     <#elseif section = "info" >
