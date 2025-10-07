@@ -12,24 +12,12 @@
         <div id="kc-form">
             <div id="kc-form-wrapper">
                 <#if realm.password>
-                    <form id="kc-form-login" class="${properties.kcFormClass!}" onsubmit="login.disabled = true; return true;" action="${url.loginAction}"
-                          method="post">
-                        <#if !usernameHidden??>
-                            <div class="${properties.kcFormGroupClass!}">
-                                <#assign label>
-                                    <#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if>
-                                </#assign>
-                                <@field.input name="username" label=label value=login.username!'' autofocus=true autocomplete="${(enableWebAuthnConditionalUI?has_content)?then('username webauthn', 'username')}" />
-                            </div>
-                        </#if>
-
+                    <form id="kc-form-login" class="${properties.kcFormClass!}">
                         <div class="${properties.kcFormGroupClass!}">
                             <#if realm.rememberMe && !usernameHidden??>
                                 <@field.checkbox name="rememberMe" label=msg("rememberMe") value=login.rememberMe?? />
                             </#if>
                         </div>
-
-                        <@buttons.loginButton />
                     </form>
                 </#if>
             </div>
