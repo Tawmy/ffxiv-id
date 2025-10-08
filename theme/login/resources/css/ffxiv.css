@@ -16,16 +16,16 @@
 .pf-v5-c-login__main {
   --padding: 0.75rem;
   padding: var(--padding) var(--padding) 0 var(--padding);
-  background: linear-gradient(to bottom, rgb(99,97,99), rgb(49,48,49) 2rem);
+  background: linear-gradient(to bottom, rgb(99, 97, 99), rgb(49, 48, 49) 2rem);
   color: white;
   border-radius: 0.5rem;
   border-left: 2px solid var(--color-xiv-frame-l);
   border-top: 2px solid var(--color-xiv-frame-t);
   border-right: 2px solid var(--color-xiv-frame-r);
   border-bottom: 2px solid var(--color-xiv-frame-b);
-  box-shadow: 0 0.2em 0.2em black, inset 0 0 0 2px #262525, inset 0 0 6px rgba(255,255,255,0.4), inset 0 3px 0 0 #afaaaf;
+  box-shadow: 0 0.2em 0.2em black, inset 0 0 0 2px #262525, inset 0 0 6px rgba(255, 255, 255, 0.4), inset 0 3px 0 0 #afaaaf;
 
-  > * {
+  >* {
     padding-inline-start: unset;
     padding-inline-end: unset;
     padding-block-start: unset;
@@ -34,7 +34,7 @@
 
   .pf-v5-c-login__main-header {
     font-size: 1.875rem;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
     width: 125%;
     transform: scaleX(80%) translateY(-0.1em);
     transform-origin: left;
@@ -58,13 +58,12 @@
       pointer-events: none;
 
       background: linear-gradient(to bottom,
-        rgb(22, 22, 22),
-        rgb(22, 22, 22) 33.3%,
-        rgb(49, 48, 49) 33.3%,
-        rgb(49, 48, 49) 66.6%,
-        rgb(86, 85, 86) 66.6%,
-        rgb(86, 85, 86)
-      );
+          rgb(22, 22, 22),
+          rgb(22, 22, 22) 33.3%,
+          rgb(49, 48, 49) 33.3%,
+          rgb(49, 48, 49) 66.6%,
+          rgb(86, 85, 86) 66.6%,
+          rgb(86, 85, 86));
     }
 
     #webauth {
