@@ -1,0 +1,15 @@
+---
+all:
+  children:
+    dev:
+      hosts:
+        dev-host-1:
+          ansible_connection: local
+    staging:
+      hosts:
+        staging-host-1:
+          ansible_connection: local
+    prod:
+      hosts:
+        prod-host-1:
+          ansible_connection: local
