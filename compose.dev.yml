@@ -9,6 +9,7 @@ services:
       - default
   
   iam:
+    image: ghcr.io/tawmy/ffxiv-id:main
     depends_on:
       db:
         condition: service_healthy

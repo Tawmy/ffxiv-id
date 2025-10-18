@@ -9,6 +9,8 @@ services:
     labels:
       - dev.orbstack.domains=id.ffxiv.local
       - dev.orbstack.http-port=8080
+    volumes:
+      - ./theme:/opt/keycloak/themes/ffxiv
 
 volumes:
   db:

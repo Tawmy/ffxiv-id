@@ -27,5 +27,3 @@ services:
       KC_BOOTSTRAP_ADMIN_CLIENT_SECRET:
       KC_HTTP_ENABLED: true
       KC_PROXY_HEADERS: xforwarded
-    volumes:
-      - ./theme:/opt/keycloak/themes/ffxiv
