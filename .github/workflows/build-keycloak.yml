@@ -11,7 +11,7 @@ on:
       - '.github/workflows/build-keycloak.yml'
 
 permissions:
-  contents: read
+  contents: write
   packages: write
 
 jobs:
@@ -58,3 +58,19 @@ jobs:
         push: true
         tags: ${{ steps.metadata.outputs.tags }}
         labels: ${{ steps.metadata.outputs.labels }}
+
+    - name: Compute release name (from tag)
+      id: release_meta
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        VERSION="${GITHUB_REF_NAME#v}"
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: ${{ steps.release_meta.outputs.version }}
+        draft: false
+        prerelease: false
