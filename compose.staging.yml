@@ -1,0 +1,28 @@
+services:
+  db:
+    networks:
+      - default
+
+  iam:
+    image: ghcr.io/tawmy/ffxiv-id:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      KC_HOSTNAME: staging.ffxiv.id
+    networks:
+      - default
+      - reverse-proxy
+    ports:
+      - "9010:9000"
+    labels:
+      caddy: staging.ffxiv.id
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+
+volumes:
+  db:
+    name: ffxiv-id-db
+
+networks:
+  reverse-proxy:
+    external: true
