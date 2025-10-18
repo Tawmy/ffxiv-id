@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
     tags:
-      - 'v*.*.*'
+      - "v[0-9]+.[0-9]+.[0-9]+"
     paths:
       - 'Dockerfile'
       - 'theme/**'
@@ -47,7 +47,6 @@ jobs:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
-
 
     - name: Build and push multi-arch image
       uses: docker/build-push-action@v6
