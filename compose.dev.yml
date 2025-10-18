@@ -1,0 +1,32 @@
+services:
+  db:
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d keycloak -U keycloak"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - default
+  
+  iam:
+    depends_on:
+      db:
+        condition: service_healthy
+    environment: 
+      KC_HOSTNAME: dev.ffxiv.id
+    networks:
+      - default
+      - caddy
+    ports:
+      - "9010:9000"
+    labels:
+      caddy: dev.ffxiv.id
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+
+volumes:
+  db:
+    name: ffxiv-id-db
+
+networks:
+  caddy:
+    external: true
