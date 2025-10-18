@@ -33,7 +33,7 @@ jobs:
           type=ref,event=branch
           type=sha,format=short
         flavor: |
-          latest=true
+          latest=${{ github.ref_type == 'tag' }}
 
     - name: Set up QEMU (for multi-arch)
       uses: docker/setup-qemu-action@v3
