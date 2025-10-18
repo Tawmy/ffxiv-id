@@ -1,4 +1,7 @@
 services:
+  db:
+    labels:
+      - dev.orbstack.domains=db.id.ffxiv.local
   iam:
     command: start --spi-theme--static-max-age=-1 --spi-theme--cache-themes=false --spi-theme--cache-templates=false
     environment:
