@@ -18,6 +18,10 @@ services:
     labels:
       caddy: dev.ffxiv.id
       caddy.reverse_proxy: "{{upstreams 8080}}"
+      caddy.@restricted.path: /realms/master* /admin*
+      caddy.@restricted.not: remote_host tawmy.ddns.net
+      caddy.0_handle: "@restricted"
+      caddy.0_handle.0_respond: "404"
 
 volumes:
   db:
