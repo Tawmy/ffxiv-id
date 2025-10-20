@@ -17,7 +17,6 @@ services:
       - "9010:9000"
     labels:
       caddy: ffxiv.id
-      caddy.reverse_proxy: "{{upstreams 8080}}"
 
 volumes:
   db:
