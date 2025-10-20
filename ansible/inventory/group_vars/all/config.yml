@@ -1,0 +1,3 @@
+keycloak_ansible_client_id: ansible
+keycloak_realm_name: eorzea
+keycloak_realm_display_name: Eorzea

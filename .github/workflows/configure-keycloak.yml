@@ -1,0 +1,60 @@
+name: Configure Keycloak
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environment to configure"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  contents: read
+
+jobs:
+  configure-keycloak:
+    name: Configure Keycloak (${{ inputs.env }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+    env:
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      ANSIBLE_VAULT_PASSWORD_FILE: /tmp/.vault_pass
+      ENV: ${{ inputs.env }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Install Ansible
+        shell: bash
+        run: pip install "ansible-core==2.19.*"
+
+      - name: Write Ansible Vault password file
+        shell: bash
+        run: echo "${ANSIBLE_VAULT_PASSWORD}" > "${ANSIBLE_VAULT_PASSWORD_FILE}"
+
+      - name: Install Ansible Galaxy collections
+        working-directory: ansible
+        run: ansible-galaxy collection install -r requirements.yml
+
+      - name: Run Ansible playbook
+        working-directory: ansible
+        run: |
+          ansible-playbook \
+            -i inventory/inventory.yml \
+            -l "${ENV}" \
+            configure.yml \
+            --vault-password-file "${ANSIBLE_VAULT_PASSWORD_FILE}"
+
+      - name: Cleanup Vault password file
+        if: always()
+        shell: bash
+        run: rm -f "${ANSIBLE_VAULT_PASSWORD_FILE}"
