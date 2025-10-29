@@ -1,15 +1,17 @@
 ---
 all:
+  vars:
+    ansible_user: ansible # todo move to group vars?
   children:
     dev:
       hosts:
-        dev-host-1:
-          ansible_connection: local
+        dev.ffxiv.id:
+          ansible_connection: ssh
     staging:
       hosts:
-        staging-host-1:
-          ansible_connection: local
+        staging.ffxiv.id:
+          ansible_connection: ssh
     prod:
       hosts:
-        prod-host-1:
-          ansible_connection: local
+        ffxiv.id:
+          ansible_connection: ssh
