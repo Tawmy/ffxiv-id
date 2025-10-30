@@ -1,2 +1,2 @@
-FROM quay.io/keycloak/keycloak:26.4.1
+FROM quay.io/keycloak/keycloak:26.4.2
 COPY theme /opt/keycloak/themes/ffxiv
