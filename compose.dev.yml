@@ -17,6 +17,7 @@ services:
       - "9010:9000"
     labels:
       caddy: dev.ffxiv.id
+      caddy.@restricted.1_not: remote_ip 49.12.44.33
 
 volumes:
   db:
