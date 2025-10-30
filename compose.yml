@@ -4,6 +4,11 @@ services:
   db:
     image: postgres:18
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d keycloak -U keycloak" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     volumes:
       - db:/var/lib/postgresql
     environment:
@@ -12,7 +17,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
   
   iam:
-    image: quay.io/keycloak/keycloak:26.4.1
+    image: ghcr.io/tawmy/ffxiv-id:0.2.0
     restart: unless-stopped
     command: start
     environment:
@@ -27,3 +32,9 @@ services:
       KC_BOOTSTRAP_ADMIN_CLIENT_SECRET:
       KC_HTTP_ENABLED: true
       KC_PROXY_HEADERS: xforwarded
+    labels:
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+      caddy.@restricted.path: /realms/master* /admin*
+      caddy.@restricted.0_not: remote_host tawmy.ddns.net
+      caddy.0_handle: "@restricted"
+      caddy.0_handle.0_respond: "404"

@@ -1,0 +1,105 @@
+name: Configure Keycloak
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environment to configure"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+permissions:
+  contents: read
+
+jobs:
+  configure-keycloak:
+    name: Configure Keycloak (${{ inputs.env }})
+    runs-on: ubuntu-24.04
+    environment: ${{ inputs.env }}
+    env:
+      ANSIBLE_VAULT_PASSWORD_FILE: /tmp/.vault_pass
+      ENV: ${{ inputs.env }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      # RUNNER SETUP
+
+      - name: Set up Hetzner Cloud CLI
+        uses: hetznercloud/setup-hcloud@4ff9bbeda4053fb69dd7fa1fcbdfcce7e648bf33 # v1.0.2
+
+      - name: Install Ansible
+        shell: bash
+        run: pip install "ansible-core==2.19.*"
+
+      - name: Install Ansible Galaxy collections
+        working-directory: ansible
+        run: ansible-galaxy collection install -r requirements.yml
+
+      - name: Write Ansible Vault password file
+        shell: bash
+        run: echo ${{ secrets.ANSIBLE_VAULT_PASSWORD }} > "${ANSIBLE_VAULT_PASSWORD_FILE}"
+
+      # SSH SETUP
+
+      - name: Setup SSH Known Hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ vars.SSH_HOST_KEY }}" >> ~/.ssh/known_hosts
+
+      - name: Load SSH Private Key
+        id: op-ssh-private-key
+        uses: 1password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6 # v3.0.0
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          SSH_PRIVATE_KEY: "op://FFXIV ID/${{ vars.OP_SSH_PRIVATE_KEY_REFERENCE }}/private key?ssh-format=openssh"
+
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@a6f90b1f127823b31d4d4a8d96047790581349bd # v0.9.1
+        with:
+          ssh-private-key: ${{ steps.op-ssh-private-key.outputs.SSH_PRIVATE_KEY }}
+
+      # HETZNER FIREWALL SETUP
+
+      - name: Detect GitHub runner public IPv4
+        id: ip
+        shell: bash
+        run: echo "public_ip=$(curl -s https://ip.me)" >> "$GITHUB_OUTPUT"
+
+      - name: Add GitHub runner public IPv4 to Hetzner firewall
+        run: hcloud firewall add-rule --direction in --source-ips ${{ steps.ip.outputs.public_ip }}/32 --protocol tcp --port 22 "${{ vars.HCLOUD_FIREWALL_ID }}"
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+
+      # ANSIBLE
+
+      - name: Run Ansible playbook
+        working-directory: ansible
+        run: |
+          ansible-playbook \
+            -i inventory/inventory.yml \
+            -l "${ENV}" \
+            configure.yml \
+            --vault-password-file "${ANSIBLE_VAULT_PASSWORD_FILE}"
+
+      # CLEANUP
+
+      - name: Cleanup Vault password file
+        if: always()
+        shell: bash
+        run: rm -f "${ANSIBLE_VAULT_PASSWORD_FILE}"
+
+      - name: Clean SSH
+        if: always()
+        run: |
+          rm -rf ~/.ssh/known_hosts
+
+      - name: Remove GitHub runner public IPv4 from Hetzner firewall
+        run: hcloud firewall delete-rule --direction in --source-ips ${{ steps.ip.outputs.public_ip }}/32 --protocol tcp --port 22 "${{ vars.HCLOUD_FIREWALL_ID }}"
+        if: always()
+        env:
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}

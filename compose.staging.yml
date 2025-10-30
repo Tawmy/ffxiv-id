@@ -2,27 +2,26 @@ services:
   db:
     networks:
       - default
-  
+
   iam:
-    image: ghcr.io/tawmy/ffxiv-id:main
     depends_on:
       db:
         condition: service_healthy
-    environment: 
-      KC_HOSTNAME: dev.ffxiv.id
+    environment:
+      KC_HOSTNAME: staging.ffxiv.id
     networks:
       - default
-      - caddy
+      - reverse-proxy
     ports:
       - "9010:9000"
     labels:
-      caddy: dev.ffxiv.id
-      caddy.@restricted.1_not: remote_ip 49.12.44.33
+      caddy: staging.ffxiv.id
+      caddy.@restricted.1_not: remote_ip 162.55.47.134
 
 volumes:
   db:
     name: ffxiv-id-db
 
 networks:
-  caddy:
+  reverse-proxy:
     external: true
