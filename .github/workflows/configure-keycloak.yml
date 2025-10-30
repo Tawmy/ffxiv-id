@@ -25,12 +25,12 @@ jobs:
       ENV: ${{ inputs.env }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       # RUNNER SETUP
 
       - name: Set up Hetzner Cloud CLI
-        uses: hetznercloud/setup-hcloud@v1
+        uses: hetznercloud/setup-hcloud@4ff9bbeda4053fb69dd7fa1fcbdfcce7e648bf33 # v1.0.2
 
       - name: Install Ansible
         shell: bash
@@ -53,13 +53,13 @@ jobs:
 
       - name: Load SSH Private Key
         id: op-ssh-private-key
-        uses: 1password/load-secrets-action@v3
+        uses: 1password/load-secrets-action@13f58eec611f8e5db52ec16247f58c508398f3e6 # v3.0.0
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           SSH_PRIVATE_KEY: "op://FFXIV ID/${{ vars.OP_SSH_PRIVATE_KEY_REFERENCE }}/private key?ssh-format=openssh"
 
       - name: Setup SSH Agent
-        uses: webfactory/ssh-agent@v0.9.1
+        uses: webfactory/ssh-agent@a6f90b1f127823b31d4d4a8d96047790581349bd # v0.9.1
         with:
           ssh-private-key: ${{ steps.op-ssh-private-key.outputs.SSH_PRIVATE_KEY }}
 
