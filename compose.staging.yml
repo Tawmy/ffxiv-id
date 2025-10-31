@@ -1,27 +1,7 @@
 services:
-  db:
-    networks:
-      - default
-
   iam:
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       KC_HOSTNAME: staging.ffxiv.id
-    networks:
-      - default
-      - reverse-proxy
-    ports:
-      - "9010:9000"
     labels:
       caddy: staging.ffxiv.id
       caddy.@restricted.1_not: remote_ip 162.55.47.134
-
-volumes:
-  db:
-    name: ffxiv-id-db
-
-networks:
-  reverse-proxy:
-    external: true
