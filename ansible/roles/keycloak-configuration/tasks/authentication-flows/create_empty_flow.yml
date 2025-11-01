@@ -1,0 +1,40 @@
+---
+- name: Define empty flow alias
+  ansible.builtin.set_fact:
+    empty_flow_alias: empty-flow-template
+
+- name: Obtain Keycloak token
+  ansible.builtin.include_tasks: tasks/util/getKeycloakToken.yml
+
+- name: Check if empty flow exists
+  ansible.builtin.uri:
+    url: "{{ keycloak_url }}/admin/realms/{{ keycloak_realm_name }}/authentication/flows"
+    method: GET
+    validate_certs: "{{ validate_certs | default(true) }}"
+    headers:
+      Authorization: "Bearer {{ keycloak_token }}"
+    return_content: true
+    status_code: 200
+  register: flows_result
+
+- name: Set fact if empty flow exists
+  ansible.builtin.set_fact:
+    flow_exists: "{{ (flows_result.json | selectattr('alias', 'equalto', empty_flow_alias) | list | length) > 0 }}"
+
+- name: Set realm-level user profile
+  ansible.builtin.uri:
+    url: "{{ keycloak_url }}/admin/realms/{{ keycloak_realm_name }}/authentication/flows"
+    method: POST
+    validate_certs: "{{ validate_certs | default(true) }}"
+    headers:
+      Authorization: Bearer {{ keycloak_token }}
+      Content-Type: application/json
+    body_format: json
+    body:
+      alias: "{{ empty_flow_alias }}"
+      description: ""
+      providerId: "basic-flow"
+      builtIn: false
+      topLevel: true
+    status_code: [200, 201, 202, 203, 204, 205, 206]
+  when: not flow_exists | default(false)

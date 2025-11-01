@@ -1,0 +1,6 @@
+---
+- name: Create empty flow
+  ansible.builtin.import_tasks: create_empty_flow.yml
+
+- name: Configure browser flow
+  ansible.builtin.import_tasks: browser.yml
