@@ -17,4 +17,13 @@
       - alias: "CONFIGURE_RECOVERY_AUTHN_CODES"
         name: "Recovery Authentication Codes"
         enabled: false
+      - alias: "UPDATE_EMAIL"
+        name: "Update Email"
+        enabled: true
+      - alias: "UPDATE_PASSWORD"
+        name: "Update Password"
+        enabled: false
+      - alias: "CONFIGURE_TOTP"
+        name: "Configure OTP"
+        enabled: false
     state: present
