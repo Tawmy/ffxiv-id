@@ -10,3 +10,9 @@
 
 - name: Set up default roles
   ansible.builtin.import_tasks: default-roles/main.yml
+
+- name: Set up user profile
+  ansible.builtin.import_tasks: user-profile/main.yml
+
+- name: Set up client scopes
+  ansible.builtin.import_tasks: client-scopes/main.yml

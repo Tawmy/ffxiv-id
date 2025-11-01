@@ -1,0 +1,41 @@
+---
+- name: Create client scopes
+  community.general.keycloak_clientscope:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    name: discord
+    protocol: openid-connect
+    attributes:
+      include.in.token.scope: "true"
+      display.on.consent.screen: "true"
+
+    protocol_mappers:
+      - name: discordId
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          access.token.claim: false
+          claim.name: discord_id
+          id.token.claim: true
+          introspection.token.claim: true
+          jsonType.label: String
+          lightweight.claim: false
+          user.attribute: discordId
+          userinfo.token.claim: true
+      - name: discordAvatar
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          access.token.claim: false
+          claim.name: discord_avatar
+          id.token.claim: true
+          introspection.token.claim: true
+          jsonType.label: String
+          lightweight.claim: false
+          user.attribute: discordAvatar
+          userinfo.token.claim: true

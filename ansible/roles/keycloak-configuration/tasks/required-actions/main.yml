@@ -1,4 +1,4 @@
-- name: Enable Delete Account required action
+- name: Configure Required Actions
   community.general.keycloak_authentication_required_actions:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_realm: master
