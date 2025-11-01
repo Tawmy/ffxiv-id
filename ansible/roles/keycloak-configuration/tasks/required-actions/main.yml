@@ -1,0 +1,20 @@
+- name: Enable Delete Account required action
+  community.general.keycloak_authentication_required_actions:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    required_actions:
+      - alias: "delete_account"
+        name: "Delete Account"
+        enabled: true
+      - alias: "webauthn-register"
+        name: "WebAuthn Register"
+        enabled: false
+      - alias: "CONFIGURE_RECOVERY_AUTHN_CODES"
+        name: "Recovery Authentication Codes"
+        enabled: false
+    state: present

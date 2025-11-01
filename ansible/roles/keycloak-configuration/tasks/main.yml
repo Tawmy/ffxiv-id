@@ -1,3 +1,12 @@
 ---
+- name: Set up Master Realm
+  ansible.builtin.import_tasks: realm-master/main.yml
+
 - name: Set up Eorzea Realm
   ansible.builtin.import_tasks: realm-eorzea/main.yml
+
+- name: Set up required actions
+  ansible.builtin.import_tasks: required-actions/main.yml
+
+- name: Set up default roles
+  ansible.builtin.import_tasks: default-roles/main.yml
