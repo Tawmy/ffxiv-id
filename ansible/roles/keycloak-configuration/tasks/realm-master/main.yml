@@ -8,8 +8,8 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     # General
-    id: master
-    realm: master
+    id: "{{ keycloak_master_realm | default('master') }}"
+    realm: "{{ keycloak_master_realm | default('master') }}"
     enabled: true
     ssl_required: "all"
 
