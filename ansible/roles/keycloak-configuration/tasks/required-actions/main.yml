@@ -26,4 +26,8 @@
       - alias: "CONFIGURE_TOTP"
         name: "Configure OTP"
         enabled: false
+      - alias: "webauthn-register-passwordless"
+        name: "Webauthn Register Passwordless"
+        enabled: true
+        defaultAction: true
     state: present
