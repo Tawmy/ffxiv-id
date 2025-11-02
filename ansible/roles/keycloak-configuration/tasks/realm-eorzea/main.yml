@@ -1,5 +1,5 @@
 ---
-- name: Create and configure realm
+- name: Create and configure Eorzea realm
   community.general.keycloak_realm:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_realm: master
@@ -16,10 +16,48 @@
     ssl_required: "all"
 
     # Login
+    ## Login screen customization
     registration_allowed: true
+    reset_password_allowed: false
+    remember_me: false # disable for now, passkey login should be fast enough
+
+    ## Email settings
+    registration_email_as_username: false
     login_with_email_allowed: false
+    duplicate_emails_allowed: false
+    verify_email: true
+
+    ## User info settings
     edit_username_allowed: true
-    
+
+    # Email
+    smtp_server: "{{ vault_smtp_configuration | default(omit) }}"
+
     # Themes
     login_theme: ffxiv
 
+    # Events
+    admin_events_enabled: true
+    admin_events_details_enabled: true
+    events_enabled: true
+    events_expiration: 2592000 # 30 days
+
+    # Sessions
+    ## SSO Session Settings
+    sso_session_idle_timeout: 1800 # 30 minutes
+    sso_session_max_lifespan: 36000 # 10 hours
+    sso_session_idle_timeout_remember_me: 604800 # 7 days
+    sso_session_max_lifespan_remember_me: 2592000 # 30 days
+
+    # User registration
+    default_roles: ['uma_authorization', 'offline_access']
+
+    # Authentication Policies
+    ## Webauthn Passwordless Policy
+    web_authn_policy_passwordless_rp_entity_name: "{{ passkey_relying_party_entity_name | default('keycloak') }}"
+    web_authn_policy_passwordless_rp_id: "{{ passkey_relying_party_id | default(omit) }}"
+    web_authn_policy_passwordless_require_resident_key: "Yes"
+    web_authn_policy_passwordless_user_verification_requirement: "required"
+    web_authn_policy_passwordless_create_timeout: 120
+    web_authn_policy_passwordless_avoid_same_authenticator_register: true
+    # web_authn_policy_passwordless_passkeys_enabled: true # not supported yet

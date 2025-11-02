@@ -1,0 +1,40 @@
+---
+- name: Create and configure Master realm
+  community.general.keycloak_realm:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    # General
+    id: "{{ keycloak_master_realm | default('master') }}"
+    realm: "{{ keycloak_master_realm | default('master') }}"
+    enabled: true
+    ssl_required: "all"
+
+    # Login
+    ## Login screen customization
+    registration_allowed: false
+    reset_password_allowed: false
+    remember_me: false
+
+    ## Email settings
+    registration_email_as_username: false
+    login_with_email_allowed: false
+    duplicate_emails_allowed: false
+    verify_email: false
+
+    ## User info settings
+    edit_username_allowed: false
+
+    # Events
+    admin_events_enabled: true
+    admin_events_details_enabled: true
+    events_enabled: true
+    events_expiration: 2592000 # 30 days
+
+    # Sessions
+    ## SSO Session Settings
+    sso_session_idle_timeout: 1800 # 30 minutes
+    sso_session_max_lifespan: 36000 # 10 hours

@@ -12,7 +12,7 @@ services:
       KC_HOSTNAME: dev.ffxiv.id
     networks:
       - default
-      - caddy
+      - reverse-proxy
     ports:
       - "9010:9000"
     labels:
@@ -24,5 +24,5 @@ volumes:
     name: ffxiv-id-db
 
 networks:
-  caddy:
+  reverse-proxy:
     external: true

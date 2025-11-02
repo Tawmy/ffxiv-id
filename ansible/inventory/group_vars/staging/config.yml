@@ -1,1 +1,3 @@
 keycloak_url: https://staging.ffxiv.id
+passkey_relying_party_entity_name: FFXIV ID Staging
+passkey_relying_party_id: staging.ffxiv.id

@@ -1,3 +1,24 @@
 ---
+- name: Set up Master Realm
+  ansible.builtin.import_tasks: realm-master/main.yml
+
 - name: Set up Eorzea Realm
   ansible.builtin.import_tasks: realm-eorzea/main.yml
+
+- name: Set up authentication flows
+  ansible.builtin.import_tasks: authentication-flows/main.yml
+
+- name: Set up required actions
+  ansible.builtin.import_tasks: required-actions/main.yml
+
+- name: Set up default roles
+  ansible.builtin.import_tasks: default-roles/main.yml
+
+- name: Set up user profile
+  ansible.builtin.import_tasks: user-profile/main.yml
+
+- name: Set up client scopes
+  ansible.builtin.import_tasks: client-scopes/main.yml
+
+- name: Set up identity providers
+  ansible.builtin.import_tasks: identity-providers/main.yml

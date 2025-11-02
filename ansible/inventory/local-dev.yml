@@ -10,6 +10,7 @@ all:
           keycloak_ansible_client_id: ansible
           keycloak_realm_name: eorzea-dev
           keycloak_realm_display_name: Eorzea (DEV)
+          keycloak_master_realm: master-dev
     staging:
       hosts:
         staging-host-1:
@@ -19,6 +20,7 @@ all:
           keycloak_ansible_client_id: ansible
           keycloak_realm_name: eorzea-staging
           keycloak_realm_display_name: Eorzea (STAGING)
+          keycloak_master_realm: master-staging
     prod:
       hosts:
         prod-host-1:
