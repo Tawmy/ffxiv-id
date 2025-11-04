@@ -11,6 +11,7 @@ all:
           keycloak_realm_name: eorzea-dev
           keycloak_realm_display_name: Eorzea (DEV)
           keycloak_master_realm: master-dev
+          passkey_relying_party_id: id.ffxiv.local
     staging:
       hosts:
         staging-host-1:
@@ -21,6 +22,7 @@ all:
           keycloak_realm_name: eorzea-staging
           keycloak_realm_display_name: Eorzea (STAGING)
           keycloak_master_realm: master-staging
+          passkey_relying_party_id: id.ffxiv.local
     prod:
       hosts:
         prod-host-1:
@@ -30,4 +32,4 @@ all:
           keycloak_ansible_client_id: ansible
           keycloak_realm_name: eorzea
           keycloak_realm_display_name: Eorzea
-          
+          passkey_relying_party_id: id.ffxiv.local
