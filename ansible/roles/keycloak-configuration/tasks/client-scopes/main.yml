@@ -9,6 +9,7 @@
 
     realm: "{{ keycloak_realm_name }}"
     name: discord
+    description: "Data from Discord identity provider"
     protocol: openid-connect
     attributes:
       include.in.token.scope: "true"
