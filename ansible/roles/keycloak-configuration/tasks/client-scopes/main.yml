@@ -49,9 +49,7 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     realm: "{{ keycloak_realm_name }}"
-    optional_clientscopes:
-      - profile
-      - email
+    optional_clientscopes: []
     default_clientscopes:
       - acr
       - basic
