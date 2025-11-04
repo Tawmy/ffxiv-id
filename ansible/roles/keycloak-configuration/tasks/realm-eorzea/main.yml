@@ -49,6 +49,9 @@
     sso_session_idle_timeout_remember_me: 604800 # 7 days
     sso_session_max_lifespan_remember_me: 2592000 # 30 days
 
+    # Tokens
+    default_signature_algorithm: ES256
+
     # User registration
     default_roles: ['uma_authorization', 'offline_access']
 

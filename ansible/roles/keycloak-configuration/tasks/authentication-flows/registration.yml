@@ -1,9 +1,9 @@
 ---
-- name: Define browser flow alias
+- name: Define registration flow alias
   ansible.builtin.set_fact:
-    browser_flow_alias: browser-passkeys-only
+    registration_flow_alias: registration-passkeys-only
 
-- name: Reset browser flow binding
+- name: Reset registration flow binding
   # Prevents issues when recreating the flow
   community.general.keycloak_realm:
     auth_keycloak_url: "{{ keycloak_url }}"
@@ -13,9 +13,9 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     realm: "{{ keycloak_realm_name }}"
-    browser_flow: browser
+    registrationFlow: registration
 
-- name: Delete existing custom browser flow if exists
+- name: Delete existing custom registration flow if exists
   community.general.keycloak_authentication:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_realm: master
@@ -24,10 +24,10 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     realm: "{{ keycloak_realm_name }}"
-    alias: "{{ browser_flow_alias }}"
+    alias: "{{ registration_flow_alias }}"
     state: absent
 
-- name: Add custom browser flow
+- name: Add custom registration flow
   community.general.keycloak_authentication:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_realm: master
@@ -36,23 +36,18 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     realm: "{{ keycloak_realm_name }}"
-    alias: "{{ browser_flow_alias }}"
+    alias: "{{ registration_flow_alias }}"
     copyFrom: "{{ empty_flow_alias }}"
     force: true
     authenticationExecutions:
-      - providerId: "auth-cookie"
-        requirement: "ALTERNATIVE"
-
-      - displayName: "browser-passkey-only-forms"
-        requirement: "ALTERNATIVE"
-      - providerId: "auth-username-form"
+      - displayName: "registration-passkey-only-forms"
         requirement: "REQUIRED"
-        flowAlias: "browser-passkey-only-forms"
-      - providerId: "auth-password-form"
+        subFlowType: "form-flow"
+      - providerId: "registration-user-creation"
         requirement: "REQUIRED"
-        flowAlias: "browser-passkey-only-forms"
+        flowAlias: "registration-passkey-only-forms"
 
-- name: Bind browser flow to realm
+- name: Bind registration flow to realm
   community.general.keycloak_realm:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_realm: master
@@ -61,4 +56,4 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     realm: "{{ keycloak_realm_name }}"
-    browserFlow: "{{ browser_flow_alias }}"
+    registrationFlow: "{{ registration_flow_alias }}"

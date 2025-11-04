@@ -38,3 +38,6 @@
     ## SSO Session Settings
     sso_session_idle_timeout: 1800 # 30 minutes
     sso_session_max_lifespan: 36000 # 10 hours
+
+    # Tokens
+    default_signature_algorithm: ES256

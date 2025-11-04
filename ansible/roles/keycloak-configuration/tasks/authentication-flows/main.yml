@@ -4,3 +4,6 @@
 
 - name: Configure browser flow
   ansible.builtin.import_tasks: browser.yml
+
+- name: Configure registration flow
+  ansible.builtin.import_tasks: registration.yml
