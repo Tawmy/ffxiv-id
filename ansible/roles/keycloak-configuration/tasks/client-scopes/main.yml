@@ -1,5 +1,5 @@
 ---
-- name: Create client scopes
+- name: Create Discord client scope
   community.general.keycloak_clientscope:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_realm: master
@@ -39,3 +39,20 @@
           lightweight.claim: false
           user.attribute: discordAvatar
           userinfo.token.claim: true
+
+- name: Set profile, email, and roles as optional scopes
+  community.general.keycloak_clientscope_type:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    optional_clientscopes:
+      - profile
+      - email
+    default_clientscopes:
+      - acr
+      - basic
+      - web-origins
