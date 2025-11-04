@@ -13,10 +13,11 @@
           'claim.name': mapper.claim_name | default(mapper.name),
           'user.attribute': mapper.user_attribute | default(mapper.name),
           'jsonType.label': mapper.json_type | default('String'),
-          'id.token.claim': true,
-          'access.token.claim': false,
+          'id.token.claim': mapper.id_token | default(true),
+          'access.token.claim': mapper.access_token | default(false),
           'userinfo.token.claim': true,
-          'introspection.token.claim': true
+          'introspection.token.claim': true,
+          'multivalued': mapper.multivalued | default(false)
         }
       }] }}"
   loop: "{{ client_scope.attribute_mappers }}"

@@ -95,6 +95,20 @@
             user_attribute: "emailVerified"
             json_type: "boolean"
             protocol_mapper: "oidc-usermodel-property-mapper"
+      - name: roles
+        attribute_mappers:
+          - name: "realm roles"
+            claim_name: "realm_access.roles"
+            multivalued: true
+            access_token: true
+            id_token: false
+            protocol_mapper: "oidc-usermodel-realm-role-mapper"
+          - name: "client roles"
+            claim_name: "resource_access.${client_id}.roles"
+            multivalued: true
+            access_token: true
+            id_token: false
+            protocol_mapper: "oidc-usermodel-client-role-mapper"
   include_tasks: modify_scope.yml
   loop: "{{ client_scope_modifications }}"
   loop_control:
