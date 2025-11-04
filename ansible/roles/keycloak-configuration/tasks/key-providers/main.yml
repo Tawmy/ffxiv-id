@@ -1,3 +1,7 @@
+- name: Build list of realms for key providers
+  ansible.builtin.set_fact:
+    realms_for_key_providers: "{{ [ keycloak_realm_name, (keycloak_master_realm | default('master')) ] | unique }}"
+
 - name: Delete rsa-generated key provider
   community.general.keycloak_component:
     auth_keycloak_url: "{{ keycloak_url }}"
@@ -8,9 +12,12 @@
 
     name: rsa-generated
     state: absent
-    parent_id: "{{ keycloak_realm_name }}"
+    parent_id: "{{ item }}"
     provider_id: rsa-generated
     provider_type: org.keycloak.keys.KeyProvider
+  loop: "{{ realms_for_key_providers }}"
+  loop_control:
+    label: "{{ item }}"
 
 - name: Delete rsa-enc-generated key provider
   community.general.keycloak_component:
@@ -22,9 +29,12 @@
 
     name: rsa-enc-generated
     state: absent
-    parent_id: "{{ keycloak_realm_name }}"
+    parent_id: "{{ item }}"
     provider_id: rsa-generated
     provider_type: org.keycloak.keys.KeyProvider
+  loop: "{{ realms_for_key_providers }}"
+  loop_control:
+    label: "{{ item }}"
 
 - name: Create ECDSA (sig) key provider
   community.general.keycloak_component:
@@ -36,7 +46,7 @@
 
     name: ecdsa-generated
     state: present
-    parent_id: "{{ keycloak_realm_name }}"
+    parent_id: "{{ item }}"
     provider_id: ecdsa-generated
     provider_type: org.keycloak.keys.KeyProvider
     config:
@@ -45,6 +55,9 @@
       active: true
       enabled: true
       priority: 201
+  loop: "{{ realms_for_key_providers }}"
+  loop_control:
+    label: "{{ item }}"
 
 - name: Create ECDH (enc) key provider
   community.general.keycloak_component:
@@ -56,7 +69,7 @@
 
     name: ecdh-generated
     state: present
-    parent_id: "{{ keycloak_realm_name }}"
+    parent_id: "{{ item }}"
     provider_id: ecdh-generated
     provider_type: org.keycloak.keys.KeyProvider
     config:
@@ -66,3 +79,6 @@
       active: true
       enabled: true
       priority: 200
+  loop: "{{ realms_for_key_providers }}"
+  loop_control:
+    label: "{{ item }}"
