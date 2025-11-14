@@ -3,7 +3,7 @@ services:
     labels:
       - dev.orbstack.domains=db.id.ffxiv.local
   iam:
-    image: quay.io/keycloak/keycloak:26.4.2
+    image: quay.io/keycloak/keycloak:26.4.5
     command: start --spi-theme--static-max-age=-1 --spi-theme--cache-themes=false --spi-theme--cache-templates=false
     environment:
       KC_HOSTNAME: https://id.ffxiv.local
