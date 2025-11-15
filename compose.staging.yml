@@ -4,4 +4,5 @@ services:
       KC_HOSTNAME: staging.ffxiv.id
     labels:
       caddy: staging.ffxiv.id
-      caddy.@restricted.1_not: remote_ip 162.55.47.134
+      caddy.@restricted.1_not: remote_ip 162.55.47.134 # staging
+      caddy.@restricted.2_not: remote_ip 128.140.60.45 # monitoring
