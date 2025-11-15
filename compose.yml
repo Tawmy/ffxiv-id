@@ -17,7 +17,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
   
   iam:
-    image: ghcr.io/tawmy/ffxiv-id:0.4.1
+    image: ghcr.io/tawmy/ffxiv-id:0.4.2
     restart: unless-stopped
     command: start
     environment:
@@ -32,6 +32,7 @@ services:
       KC_BOOTSTRAP_ADMIN_CLIENT_SECRET:
       KC_HTTP_ENABLED: true
       KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: true
     labels:
       caddy.reverse_proxy: "{{upstreams 8080}}"
       caddy.@restricted.path: /realms/master* /admin*
