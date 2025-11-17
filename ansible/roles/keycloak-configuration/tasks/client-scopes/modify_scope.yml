@@ -35,3 +35,5 @@
     realm: "{{ keycloak_realm_name }}"
     name: "{{ client_scope.name }}"
     protocol_mappers: "{{ current_protocol_mappers }}"
+    attributes:
+      include.in.token.scope: "{{ client_scope.include_in_token_scope | default('true') }}"

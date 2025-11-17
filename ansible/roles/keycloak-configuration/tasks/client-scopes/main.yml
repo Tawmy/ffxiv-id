@@ -56,7 +56,7 @@
       - basic
       - web-origins
 
-- name: Modify 'profile' and 'email' client scope mappers
+- name: Modify 'profile', 'email', and 'roles' client scope mappers
   vars:
     client_scope_modifications:
       - name: profile
