@@ -23,6 +23,7 @@
       jwt.credential.certificate: "{{ item.signing_key | default('') }}"
     standard_flow_enabled: "{{ item.authorization_code_flow | default(true) }}"
     service_accounts_enabled: "{{ item.client_credentials_flow | default(false) }}"
+    direct_access_grants_enabled: false
     frontchannel_logout: true # TODO introduce backchannel logout
 
   loop: "{{ clients | default([]) }}"
