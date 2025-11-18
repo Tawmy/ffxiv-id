@@ -1,0 +1,42 @@
+---
+- name: Create clients
+  community.general.keycloak_client:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    state: present
+    realm: "{{ keycloak_realm_name }}"
+    client_id: "{{ item.client_id }}"
+    name: "{{ item.client_id }}"
+    public_client: "{{ item.public_client | default(false) }}"
+    client_authenticator_type: "client-jwt"
+    redirect_uris: "{{ item.redirect_uris | default(['*']) }}"
+    attributes:
+      pkce.code.challenge.method: "S256"
+      par.require: "{{ item.pushed_authorization_requests | default(true) }}"
+      require.pushed.authorization.requests: "{{ item.pushed_authorization_requests | default(true) }}"
+      post.logout.redirect.uris: "{{ item.post_logout_redirect_uris | join('##') }}"
+      dpop.bound.access.tokens: "{{ item.public_client | default(false) }}"
+      jwt.credential.certificate: "{{ item.signing_key | default('') }}"
+    standard_flow_enabled: "{{ item.authorization_code_flow | default(true) }}"
+    service_accounts_enabled: "{{ item.client_credentials_flow | default(false) }}"
+    frontchannel_logout: true # TODO introduce backchannel logout
+
+  loop: "{{ clients | default([]) }}"
+
+- name: Update client scopes
+  community.general.keycloak_clientscope_type:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    client_id: "{{item.client_id}}"
+    optional_clientscopes: "{{ client_scopes[item.client_id] | default([]) }}"
+    default_clientscopes: [basic, acr, web-origins]
+  loop: "{{ clients | default([]) }}"
