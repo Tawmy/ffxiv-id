@@ -20,7 +20,10 @@
       require.pushed.authorization.requests: "{{ item.pushed_authorization_requests | default(true) }}"
       post.logout.redirect.uris: "{{ item.post_logout_redirect_uris | join('##') }}"
       dpop.bound.access.tokens: "{{ item.public_client | default(false) }}"
+      use.jwks.url: "{{ true if item.jwks_url is defined else false }}"
+      jwks.url: "{{ item.jwks_url | default('')}}"
       jwt.credential.certificate: "{{ item.certificate | default('') }}"
+      token.endpoint.auth.signing.alg: "{{ item.certificate_algorithm | default('ES256') }}"
     standard_flow_enabled: "{{ item.authorization_code_flow | default(true) }}"
     service_accounts_enabled: "{{ item.client_credentials_flow | default(false) }}"
     direct_access_grants_enabled: false
