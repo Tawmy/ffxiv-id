@@ -51,6 +51,7 @@
 
     # Tokens
     default_signature_algorithm: ES256
+    revoke_refresh_token: true
 
     # User registration
     default_roles: ['uma_authorization', 'offline_access']
