@@ -24,10 +24,14 @@
       jwks.url: "{{ item.jwks_url | default('')}}"
       jwt.credential.certificate: "{{ item.certificate | default('') }}"
       token.endpoint.auth.signing.alg: "{{ item.certificate_algorithm | default('ES256') }}"
+      frontchannel.logout.url: "{{ item.frontchannel_logout_url | default('') }}"
+      backchannel.logout.url: "{{ item.backchannel_logout_url | default(omit) }}"
+      backchannel.logout.revoke.offline.tokens: "false"
+      backchannel.logout.session.required: "true"
     standard_flow_enabled: "{{ item.authorization_code_flow | default(true) }}"
     service_accounts_enabled: "{{ item.client_credentials_flow | default(false) }}"
     direct_access_grants_enabled: false
-    frontchannel_logout: true # TODO introduce backchannel logout
+    frontchannel_logout: "{{ false if item.backchannel_logout_url is defined else true }}"
 
   loop: "{{ clients | default([]) }}"
 
