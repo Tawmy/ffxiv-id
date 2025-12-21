@@ -15,8 +15,8 @@
     public_client: "{{ item.public_client | default(false) }}"
     secret: "{{ (vault_clients[item.client_id].client_secret) | default(omit, true) }}"
     client_authenticator_type: "{{ 'client-secret' if vault_clients[item.client_id].client_secret is defined else 'client-jwt'}}"
-    redirect_uris: "{{ item.redirect_uris | default(['']) | join('##') }}"
-    web_origins: "{{ item.web_origins | default(['']) | join('##') }}"
+    redirect_uris: "{{ item.redirect_uris | default(['']) }}"
+    web_origins: "{{ item.web_origins | default(['']) }}"
     attributes:
       pkce.code.challenge.method: "S256"
       par.require: "{{ item.pushed_authorization_requests | default(true) }}"
