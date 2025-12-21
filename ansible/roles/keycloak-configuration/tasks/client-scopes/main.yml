@@ -41,6 +41,31 @@
           user.attribute: discordAvatar
           userinfo.token.claim: true
 
+- name: Create Netstone API client scope
+  community.general.keycloak_clientscope:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    name: netstone-api
+    description: "Access to Netstone API"
+    protocol: openid-connect
+    attributes:
+      include.in.token.scope: "true"
+      display.on.consent.screen: "false"
+
+    protocol_mappers:
+      - name: netstone-api-audience
+        protocol: openid-connect
+        protocolMapper: oidc-audience-mapper
+        config:
+          access.token.claim: true
+          introspection.token.claim: true
+          included.client.audience: netstone-api
+
 - name: Configure default and optional client scopes
   community.general.keycloak_clientscope_type:
     auth_keycloak_url: "{{ keycloak_url }}"

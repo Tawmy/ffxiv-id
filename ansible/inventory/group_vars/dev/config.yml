@@ -1,3 +1,22 @@
 keycloak_url: https://dev.ffxiv.id
 passkey_relying_party_entity_name: FFXIV ID Dev
 passkey_relying_party_id: dev.ffxiv.id
+
+clients:
+- client_id: netstone-api
+  name: Netstone API
+  description: Pseudo client for Netstone API. Login is not actually possible, this is currently only used for audience mapping.
+
+- client_id: netstone-api-sdk
+  name: Netstone API SDK
+  description: Client for running Netstone API SDK tests. Not used as an actual user facing client.
+  client_credentials_flow: true
+  certificate: "MIIB3zCCAYWgAwIBAgIUDIRCVV+HrYdN75UwLEzizvCmJyEwCgYIKoZIzj0EAwIwRTELMAkGA1UEBhMCQVUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNVBAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDAeFw0yNTEyMjAxMDA1MTBaFw0yNjEyMjAxMDA1MTBaMEUxCzAJBgNVBAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMSEwHwYDVQQKDBhJbnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASK0UEuc2+hK0Z086KbfgzdDMh4cK+rukp8vyTyjIN+ObA8oiI/3TSVWKsdROcxa9KUiNPmtxxGLpOc5BNwnb9Do1MwUTAdBgNVHQ4EFgQUc8R1QWZEvwbFoKyu166PtQmjtS8wHwYDVR0jBBgwFoAUc8R1QWZEvwbFoKyu166PtQmjtS8wDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNIADBFAiEAqXoys38c5M/tkwTv4SlNjLNrFWoski5B2el7NZnWKIwCIDJaiZ6S0KLrsA1hg7RSYr9pj80xkeT4XmqEeMEyec+C"
+
+- client_id: netstone-api-swagger
+  name: Netstone API Swagger UI
+  description: Swagger UI for Netstone API. Only used for development, and only supports client secret.
+  client_credentials_flow: true
+  web_origins:
+    - https://netstone.tawmy.dev
+    - https://api.netstone.local

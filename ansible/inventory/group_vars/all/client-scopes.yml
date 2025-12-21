@@ -1,0 +1,5 @@
+client_scopes:
+  netstone-api-sdk:
+    - netstone-api
+  netstone-api-swagger:
+    - netstone-api
