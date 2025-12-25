@@ -64,4 +64,4 @@
     web_authn_policy_passwordless_user_verification_requirement: "required"
     web_authn_policy_passwordless_create_timeout: 120
     web_authn_policy_passwordless_avoid_same_authenticator_register: true
-    # web_authn_policy_passwordless_passkeys_enabled: true # not supported yet
+    web_authn_policy_passwordless_passkeys_enabled: true
