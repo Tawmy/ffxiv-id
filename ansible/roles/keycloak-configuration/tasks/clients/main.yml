@@ -36,7 +36,7 @@
     direct_access_grants_enabled: false
     frontchannel_logout: "{{ false if item.backchannel_logout_url is defined else true }}"
 
-  loop: "{{ clients | default([]) }}"
+  loop: "{{ clients | default([]) + local_clients | default([]) }}"
 
 - name: Update client scopes
   community.general.keycloak_clientscope_type:
@@ -50,4 +50,4 @@
     client_id: "{{item.client_id}}"
     optional_clientscopes: "{{ client_scopes[item.client_id] | default([]) }}"
     default_clientscopes: [basic, acr, web-origins]
-  loop: "{{ clients | default([]) }}"
+  loop: "{{ clients | default([]) + local_clients | default([]) }}"
