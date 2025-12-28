@@ -6,3 +6,9 @@ clients:
 - client_id: netstone-api
   name: Netstone API
   description: Pseudo client for Netstone API. Login is not actually possible, this is currently only used for audience mapping.
+
+- client_id: alyx-discord
+  name: Alyx Discord
+  description: Alyx retrieves data from the Lodestone to create character sheets.
+  client_credentials_flow: true
+  jwks_url: https://alyx.staging.eorzea.online/.well-known/jwks
