@@ -1,0 +1,10 @@
+client_scopes:
+  monitoring:
+    - alyx-discord
+    - netstone-api
+  netstone-api-sdk:
+    - netstone-api
+  netstone-api-swagger:
+    - netstone-api
+  alyx-discord:
+    - netstone-api

@@ -41,3 +41,4 @@
 
     # Tokens
     default_signature_algorithm: ES256
+    revoke_refresh_token: true

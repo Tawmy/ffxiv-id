@@ -12,6 +12,11 @@ all:
           keycloak_realm_display_name: Eorzea (DEV)
           keycloak_master_realm: master-dev
           passkey_relying_party_id: id.ffxiv.local
+
+          local_clients:
+          - client_id: alyx-discord
+            client_credentials_flow: true
+            jwks_url: https://alyx.discord.local/.well-known/jwks
     staging:
       hosts:
         staging-host-1:

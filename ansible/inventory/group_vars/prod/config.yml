@@ -1,3 +1,8 @@
 keycloak_url: https://ffxiv.id
 passkey_relying_party_entity_name: FFXIV ID
 passkey_relying_party_id: ffxiv.id
+
+clients:
+- client_id: netstone-api
+  name: Netstone API
+  description: Pseudo client for Netstone API. Login is not actually possible, this is currently only used for audience mapping.
