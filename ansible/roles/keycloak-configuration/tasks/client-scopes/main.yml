@@ -14,6 +14,7 @@
     attributes:
       include.in.token.scope: "true"
       display.on.consent.screen: "true"
+      consent.screen.text: "Discord User ID and Avatar"
 
     protocol_mappers:
       - name: discordId
@@ -41,7 +42,7 @@
           user.attribute: discordAvatar
           userinfo.token.claim: true
 
-- name: Create Netstone API client scope
+- name: Create NetStone API client scope
   community.general.keycloak_clientscope:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_realm: master
