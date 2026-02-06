@@ -3,8 +3,10 @@ services:
     labels:
       - dev.orbstack.domains=db.id.ffxiv.local
   iam:
-    image: quay.io/keycloak/keycloak:26.5.1
-    command: start --spi-theme--static-max-age=-1 --spi-theme--cache-themes=false --spi-theme--cache-templates=false
+    image: ffxiv-id
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       KC_HOSTNAME: https://id.ffxiv.local
       KC_TRUSTSTORE_PATHS: /etc/ssl/certs/orbstack-root.crt
