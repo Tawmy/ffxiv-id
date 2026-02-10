@@ -17,7 +17,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
   
   iam:
-    image: ghcr.io/tawmy/ffxiv-id:0.6.0
+    image: ghcr.io/tawmy/ffxiv-id:0.7.0
     restart: unless-stopped
     environment:
       KC_DB_URL_HOST: db
