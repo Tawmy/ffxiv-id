@@ -31,3 +31,9 @@ clients:
   description: Alyx retrieves data from the Lodestone to create character sheets.
   client_credentials_flow: true
   jwks_url: https://alyx.tawmy.dev/.well-known/jwks
+
+- client_id: infinite-backlog
+  name: Infinite Backlog
+  description: Infinite Backlog retrieves data from the Lodestone for its FFXIV integration.
+  client_credentials_flow: true
+  certificate: "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoKKZcO+Jtj58UNW9z8ySKCUXqFyfoTpWPJCkURy9HYyZiujM4HU/gvt6MTM4ZlWMRGwPN5u25mywhjPt2yTEzA=="
