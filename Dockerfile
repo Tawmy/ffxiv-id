@@ -1,4 +1,4 @@
-ARG KEYCLOAK_VERSION=26.5.4
+ARG KEYCLOAK_VERSION=26.5.5
 
 FROM quay.io/keycloak/keycloak:$KEYCLOAK_VERSION AS builder
 ENV KC_DB=postgres
