@@ -8,3 +8,5 @@ client_scopes:
     - netstone-api
   alyx-discord:
     - netstone-api
+  infinite-backlog:
+    - netstone-api
