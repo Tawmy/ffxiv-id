@@ -10,3 +10,5 @@ client_scopes:
     - netstone-api
   infinite-backlog:
     - netstone-api
+  duty-finder-service-swagger:
+    - duty-finder-service
