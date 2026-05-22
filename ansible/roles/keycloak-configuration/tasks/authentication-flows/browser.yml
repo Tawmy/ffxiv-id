@@ -1,11 +1,6 @@
 ---
-- name: Define browser flow alias
-  ansible.builtin.set_fact:
-    browser_flow_alias: browser-passkeys-only
-
-- name: Reset browser flow binding
-  # Prevents issues when recreating the flow
-  community.general.keycloak_realm:
+- name: Configure custom browser flow
+  community.general.keycloak_authentication_v2:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_realm: master
     auth_client_id: "{{ keycloak_ansible_client_id }}"
@@ -13,44 +8,17 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     realm: "{{ keycloak_realm_name }}"
-    browser_flow: browser
-
-- name: Delete existing custom browser flow if exists
-  community.general.keycloak_authentication:
-    auth_keycloak_url: "{{ keycloak_url }}"
-    auth_realm: master
-    auth_client_id: "{{ keycloak_ansible_client_id }}"
-    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
-    validate_certs: "{{ validate_certs | default(true) }}"
-
-    realm: "{{ keycloak_realm_name }}"
-    alias: "{{ browser_flow_alias }}"
-    state: absent
-
-- name: Add custom browser flow
-  community.general.keycloak_authentication:
-    auth_keycloak_url: "{{ keycloak_url }}"
-    auth_realm: master
-    auth_client_id: "{{ keycloak_ansible_client_id }}"
-    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
-    validate_certs: "{{ validate_certs | default(true) }}"
-
-    realm: "{{ keycloak_realm_name }}"
-    alias: "{{ browser_flow_alias }}"
-    copyFrom: "{{ empty_flow_alias }}"
-    force: true
+    alias: browser-passkeys-only
     authenticationExecutions:
-      - providerId: "auth-cookie"
-        requirement: "ALTERNATIVE"
-
-      - displayName: "browser-passkey-only-forms"
-        requirement: "ALTERNATIVE"
-      - providerId: "auth-username-form"
-        requirement: "REQUIRED"
-        flowAlias: "browser-passkey-only-forms"
-      - providerId: "auth-password-form"
-        requirement: "REQUIRED"
-        flowAlias: "browser-passkey-only-forms"
+      - providerId: auth-cookie
+        requirement: ALTERNATIVE
+      - subFlow: browser-passkey-only-forms
+        requirement: ALTERNATIVE
+        authenticationExecutions:
+          - providerId: auth-username-form
+            requirement: REQUIRED
+          - providerId: auth-password-form
+            requirement: REQUIRED
 
 - name: Bind browser flow to realm
   community.general.keycloak_realm:
@@ -61,4 +29,4 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     realm: "{{ keycloak_realm_name }}"
-    browserFlow: "{{ browser_flow_alias }}"
+    browserFlow: browser-passkeys-only

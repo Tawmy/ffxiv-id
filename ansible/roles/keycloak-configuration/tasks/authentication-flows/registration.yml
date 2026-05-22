@@ -1,11 +1,6 @@
 ---
-- name: Define registration flow alias
-  ansible.builtin.set_fact:
-    registration_flow_alias: registration-passkeys-only
-
-- name: Reset registration flow binding
-  # Prevents issues when recreating the flow
-  community.general.keycloak_realm:
+- name: Configure custom registration flow
+  community.general.keycloak_authentication_v2:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_realm: master
     auth_client_id: "{{ keycloak_ansible_client_id }}"
@@ -13,39 +8,14 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     realm: "{{ keycloak_realm_name }}"
-    registrationFlow: registration
-
-- name: Delete existing custom registration flow if exists
-  community.general.keycloak_authentication:
-    auth_keycloak_url: "{{ keycloak_url }}"
-    auth_realm: master
-    auth_client_id: "{{ keycloak_ansible_client_id }}"
-    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
-    validate_certs: "{{ validate_certs | default(true) }}"
-
-    realm: "{{ keycloak_realm_name }}"
-    alias: "{{ registration_flow_alias }}"
-    state: absent
-
-- name: Add custom registration flow
-  community.general.keycloak_authentication:
-    auth_keycloak_url: "{{ keycloak_url }}"
-    auth_realm: master
-    auth_client_id: "{{ keycloak_ansible_client_id }}"
-    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
-    validate_certs: "{{ validate_certs | default(true) }}"
-
-    realm: "{{ keycloak_realm_name }}"
-    alias: "{{ registration_flow_alias }}"
-    copyFrom: "{{ empty_flow_alias }}"
-    force: true
+    alias: registration-passkeys-only
     authenticationExecutions:
-      - displayName: "registration-passkey-only-forms"
-        requirement: "REQUIRED"
-        subFlowType: "form-flow"
-      - providerId: "registration-user-creation"
-        requirement: "REQUIRED"
-        flowAlias: "registration-passkey-only-forms"
+      - subFlow: registration-passkey-only-forms
+        subFlowType: form-flow
+        requirement: REQUIRED
+        authenticationExecutions:
+          - providerId: registration-user-creation
+            requirement: REQUIRED
 
 - name: Bind registration flow to realm
   community.general.keycloak_realm:
@@ -56,4 +26,4 @@
     validate_certs: "{{ validate_certs | default(true) }}"
 
     realm: "{{ keycloak_realm_name }}"
-    registrationFlow: "{{ registration_flow_alias }}"
+    registrationFlow: registration-passkeys-only
