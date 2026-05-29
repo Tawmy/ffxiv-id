@@ -293,6 +293,7 @@ public class SteamIdentityProvider
 
                 BrokeredIdentityContext identity = new BrokeredIdentityContext(steamId, config);
                 identity.setUsername(steamId);
+                identity.setUserAttribute("steamId", steamId);
                 identity.setIdp(provider);
                 identity.setAuthenticationSession(authSession);
 
