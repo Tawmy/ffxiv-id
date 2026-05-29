@@ -13,4 +13,5 @@
     alias: steam
     display_name: Steam
     config:
-      syncMode: "IMPORT"
+      syncMode: "FORCE"
+      apiKey: "{{ vault_steam_api_key | default('') }}"

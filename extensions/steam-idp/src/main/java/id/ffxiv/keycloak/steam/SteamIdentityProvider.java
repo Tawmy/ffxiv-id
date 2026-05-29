@@ -6,8 +6,8 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriBuilder;
 import jakarta.ws.rs.core.UriInfo;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.keycloak.broker.oidc.AbstractOAuth2IdentityProvider;
-import org.keycloak.broker.oidc.OAuth2IdentityProviderConfig;
 import org.keycloak.broker.provider.AuthenticationRequest;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
@@ -17,17 +17,20 @@ import org.keycloak.http.simple.SimpleHttp;
 import org.keycloak.http.simple.SimpleHttpRequest;
 import org.keycloak.models.FederatedIdentityModel;
 import org.keycloak.models.IdentityProviderModel;
+import org.keycloak.models.IdentityProviderSyncMode;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.models.UserSessionModel;
 import org.keycloak.sessions.AuthenticationSessionModel;
+import org.keycloak.util.JsonSerialization;
 import org.jboss.logging.Logger;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.DateTimeException;
 import java.time.Duration;
@@ -45,8 +48,8 @@ import java.util.regex.Pattern;
  * or local signature checks.
  */
 public class SteamIdentityProvider
-        extends AbstractOAuth2IdentityProvider<OAuth2IdentityProviderConfig>
-        implements SocialIdentityProvider<OAuth2IdentityProviderConfig> {
+        extends AbstractOAuth2IdentityProvider<SteamIdentityProviderConfig>
+        implements SocialIdentityProvider<SteamIdentityProviderConfig> {
 
     private static final Logger LOG = Logger.getLogger(SteamIdentityProvider.class);
 
@@ -54,6 +57,9 @@ public class SteamIdentityProvider
     private static final String OPENID_IDENTIFIER_SELECT = "http://specs.openid.net/auth/2.0/identifier_select";
     private static final String STEAM_OPENID_URL = "https://steamcommunity.com/openid/login";
     private static final String STEAM_ID_PREFIX = "https://steamcommunity.com/openid/id/";
+    // Steam Web API endpoint used to enrich the identity with persona name and avatar.
+    private static final String STEAM_PLAYER_SUMMARIES_URL =
+            "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/";
     // Steam OpenID logs in individual accounts, whose SteamID64 is always 17 digits.
     private static final Pattern STEAM_ID_PATTERN = Pattern.compile("\\d{17}");
 
@@ -69,7 +75,7 @@ public class SteamIdentityProvider
     private static final Duration NONCE_CLOCK_SKEW = Duration.ofMinutes(1);
     private static final String NONCE_SINGLE_USE_PREFIX = "steam-openid-nonce:";
 
-    public SteamIdentityProvider(KeycloakSession session, OAuth2IdentityProviderConfig config) {
+    public SteamIdentityProvider(KeycloakSession session, SteamIdentityProviderConfig config) {
         super(session, config);
     }
 
@@ -117,6 +123,25 @@ public class SteamIdentityProvider
         return Response.noContent().build();
     }
 
+    /**
+     * Re-applies the Steam profile attributes (persona, avatar, profile URL) on every subsequent
+     * login. Keycloak's broker update path only re-imports basic fields and the configured mappers,
+     * so attributes set directly on the {@link BrokeredIdentityContext} would otherwise be frozen at
+     * first-login values. This runs only when the IdP sync mode is FORCE, so the standard Keycloak
+     * "syncMode" config controls whether the profile is refreshed. Attributes absent from the context
+     * (e.g. a transient Steam API failure left them unfetched) are left untouched rather than cleared.
+     */
+    @Override
+    public void updateBrokeredUser(KeycloakSession session, RealmModel realm, UserModel user,
+                                   BrokeredIdentityContext context) {
+        super.updateBrokeredUser(session, realm, user, context);
+
+        if (getConfig().getSyncMode() != IdentityProviderSyncMode.FORCE) {
+            return;
+        }
+        context.getAttributes().forEach(user::setAttribute);
+    }
+
     static boolean verifyWithSteam(KeycloakSession session, MultivaluedMap<String, String> params)
             throws IOException {
         SimpleHttpRequest request = SimpleHttp.create(session).doPost(STEAM_OPENID_URL);
@@ -141,6 +166,71 @@ public class SteamIdentityProvider
             throw new IdentityBrokerException("Invalid Steam claimed_id: " + claimedId);
         }
         return steamId;
+    }
+
+    /** Profile data resolved from the Steam Web API; any field may be null. */
+    record SteamPlayer(String personaName, String avatarUrl, String profileUrl) {
+    }
+
+    /**
+     * Best-effort enrichment via {@code ISteamUser/GetPlayerSummaries}. OpenID 2.0 only proves the
+     * SteamID64, so the persona name and avatar must be fetched separately, which requires a Steam
+     * Web API key. Returns {@code null} when no key is configured or the lookup fails for any reason
+     * (network error, rate limit, unexpected payload); the caller then falls back to the SteamID
+     * alone, so a profile-fetch failure must never block an otherwise valid login.
+     */
+    static SteamPlayer fetchPlayerSummary(KeycloakSession session, String apiKey, String steamId) {
+        if (apiKey == null || apiKey.isBlank()) {
+            return null;
+        }
+        try {
+            String url = STEAM_PLAYER_SUMMARIES_URL
+                    + "?key=" + URLEncoder.encode(apiKey, StandardCharsets.UTF_8)
+                    + "&steamids=" + URLEncoder.encode(steamId, StandardCharsets.UTF_8);
+
+            String body = SimpleHttp.create(session).doGet(url).asString();
+            if (body == null) {
+                return null;
+            }
+
+            JsonNode players = JsonSerialization.readValue(body, JsonNode.class)
+                    .path("response").path("players");
+            if (!players.isArray() || players.isEmpty()) {
+                LOG.warnf("Steam returned no player summary for %s", steamId);
+                return null;
+            }
+
+            JsonNode player = players.get(0);
+            String persona = text(player, "personaname");
+            // Steam offers small/medium/full avatars; prefer the largest available.
+            String avatar = firstNonBlank(
+                    text(player, "avatarfull"),
+                    text(player, "avatarmedium"),
+                    text(player, "avatar"));
+            String profileUrl = text(player, "profileurl");
+            return new SteamPlayer(persona, avatar, profileUrl);
+        } catch (IOException e) {
+            LOG.warnf(e, "Could not fetch Steam player summary for %s", steamId);
+            return null;
+        }
+    }
+
+    private static String text(JsonNode node, String field) {
+        JsonNode value = node.get(field);
+        if (value == null || value.isNull()) {
+            return null;
+        }
+        String text = value.asText();
+        return text.isBlank() ? null : text;
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return null;
     }
 
     /**
@@ -292,8 +382,24 @@ public class SteamIdentityProvider
                 String steamId = extractSteamId(params.getFirst("openid.claimed_id"));
 
                 BrokeredIdentityContext identity = new BrokeredIdentityContext(steamId, config);
+                // The SteamID64 is the only stable, unique identifier Steam exposes; persona names
+                // are mutable and non-unique, so the SteamID stays the Keycloak username.
                 identity.setUsername(steamId);
                 identity.setUserAttribute("steamId", steamId);
+
+                SteamPlayer player = fetchPlayerSummary(session, provider.getConfig().getApiKey(), steamId);
+                if (player != null) {
+                    if (player.personaName() != null) {
+                        identity.setUserAttribute("steamPersona", player.personaName());
+                    }
+                    if (player.avatarUrl() != null) {
+                        identity.setUserAttribute("steamAvatar", player.avatarUrl());
+                    }
+                    if (player.profileUrl() != null) {
+                        identity.setUserAttribute("steamProfileUrl", player.profileUrl());
+                    }
+                }
+
                 identity.setIdp(provider);
                 identity.setAuthenticationSession(authSession);
 
