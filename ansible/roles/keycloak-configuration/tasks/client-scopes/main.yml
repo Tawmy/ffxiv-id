@@ -42,6 +42,37 @@
           user.attribute: discordAvatar
           userinfo.token.claim: true
 
+- name: Create Steam client scope
+  community.general.keycloak_clientscope:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    name: steam
+    description: "Data from Steam identity provider"
+    protocol: openid-connect
+    attributes:
+      include.in.token.scope: "true"
+      display.on.consent.screen: "true"
+      consent.screen.text: "Steam ID"
+
+    protocol_mappers:
+      - name: steamId
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          access.token.claim: false
+          claim.name: steam_id
+          id.token.claim: true
+          introspection.token.claim: true
+          jsonType.label: String
+          lightweight.claim: false
+          user.attribute: steamId
+          userinfo.token.claim: true
+
 - name: Create NetStone API client scope
   community.general.keycloak_clientscope:
     auth_keycloak_url: "{{ keycloak_url }}"
