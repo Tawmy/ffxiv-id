@@ -8,7 +8,7 @@ RUN mvn -B -q -DskipTests package
 FROM quay.io/keycloak/keycloak:$KEYCLOAK_VERSION AS builder
 ENV KC_DB=postgres
 ENV KC_HEALTH_ENABLED=true
-ENV KC_FEATURES_DISABLED=ciba,device-flow,kerberos,organization
+ENV KC_FEATURES_DISABLED=ciba,device-flow,kerberos
 COPY --chown=keycloak:keycloak theme /opt/keycloak/themes/ffxiv
 COPY --from=extensions /build/steam-idp/target/keycloak-steam-idp.jar /opt/keycloak/providers/
 RUN /opt/keycloak/bin/kc.sh build
