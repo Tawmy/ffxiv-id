@@ -29,7 +29,7 @@
       - name: discordId
         identityProviderMapper: oidc-user-attribute-idp-mapper
         config:
-          syncMode: INHERIT
+          syncMode: FORCE
           claim: sub
           user.attribute: discordId
       - name: discordUsername

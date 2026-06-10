@@ -69,8 +69,60 @@
                 edit: []
               multivalued: false
               group: discord
+            - name: steamId
+              displayName: Steam ID
+              validations:
+                length:
+                  max: 17
+              annotations: {}
+              permissions:
+                view:
+                  - admin
+                edit: []
+              multivalued: false
+              group: steam
+            - name: steamPersona
+              displayName: Steam Persona
+              validations:
+                length:
+                  max: 255
+              annotations: {}
+              permissions:
+                view:
+                  - admin
+                edit: []
+              multivalued: false
+              group: steam
+            - name: steamAvatar
+              displayName: Steam Avatar
+              validations:
+                length:
+                  max: 255
+              annotations: {}
+              permissions:
+                view:
+                  - admin
+                edit: []
+              multivalued: false
+              group: steam
+            - name: steamProfileUrl
+              displayName: Steam Profile URL
+              validations:
+                length:
+                  max: 255
+              annotations: {}
+              permissions:
+                view:
+                  - admin
+                edit: []
+              multivalued: false
+              group: steam
           groups:
             - name: discord
               displayHeader: Discord IdP data
               displayDescription: Attributes retrieved from Discord IdP
+              annotations: { }
+            - name: steam
+              displayHeader: Steam IdP data
+              displayDescription: Attributes retrieved from Steam IdP
               annotations: { }
