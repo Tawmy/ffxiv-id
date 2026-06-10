@@ -129,12 +129,10 @@ public class SteamIdentityProvider
     }
 
     /**
-     * Re-applies the Steam profile attributes (persona, avatar, profile URL) on every subsequent
-     * login. Keycloak's broker update path only re-imports basic fields and the configured mappers,
-     * so attributes set directly on the {@link BrokeredIdentityContext} would otherwise be frozen at
-     * first-login values. This runs only when the IdP sync mode is FORCE, so the standard Keycloak
-     * "syncMode" config controls whether the profile is refreshed. Attributes absent from the context
-     * (e.g. a transient Steam API failure left them unfetched) are left untouched rather than cleared.
+     * Re-applies the Steam profile attributes (persona, avatar, profile URL) on each login; Keycloak's
+     * broker update otherwise freezes {@link BrokeredIdentityContext} attributes at first-login values.
+     * Gated on the FORCE sync mode. Attributes missing from the context (e.g. a Steam API hiccup) are
+     * left as-is rather than cleared.
      */
     @Override
     public void updateBrokeredUser(KeycloakSession session, RealmModel realm, UserModel user,
@@ -196,11 +194,9 @@ public class SteamIdentityProvider
     }
 
     /**
-     * Best-effort enrichment via {@code ISteamUser/GetPlayerSummaries}. OpenID 2.0 only proves the
-     * SteamID64, so the persona name and avatar must be fetched separately, which requires a Steam
-     * Web API key. Returns {@code null} when no key is configured or the lookup fails for any reason
-     * (network error, rate limit, unexpected payload); the caller then falls back to the SteamID
-     * alone, so a profile-fetch failure must never block an otherwise valid login.
+     * Best-effort enrichment via {@code ISteamUser/GetPlayerSummaries} (needs a Web API key), since
+     * OpenID 2.0 only proves the SteamID64. Returns {@code null} on any failure so a profile-fetch
+     * problem never blocks a valid login; the caller then falls back to the SteamID alone.
      */
     static SteamPlayer fetchPlayerSummary(KeycloakSession session, String apiKey, String steamId) {
         if (apiKey == null || apiKey.isBlank()) {
@@ -257,9 +253,8 @@ public class SteamIdentityProvider
     }
 
     /**
-     * Confirms that the (already signature-verified) assertion was issued by Steam for this
-     * exact login attempt and has not been replayed. Must run only after {@link #verifyWithSteam}
-     * returns true, since it trusts {@code openid.signed} and the fields it lists.
+     * Confirms the assertion was issued by Steam for this login attempt and not replayed. Run only
+     * after {@link #verifyWithSteam} succeeds, since it trusts {@code openid.signed} and its fields.
      */
     static void validateSignedAssertion(KeycloakSession session, UriInfo uriInfo, String state) {
         MultivaluedMap<String, String> params = uriInfo.getQueryParameters();
@@ -290,14 +285,11 @@ public class SteamIdentityProvider
     }
 
     /**
-     * Steam's {@code openid.response_nonce} starts with an RFC 3339 UTC timestamp (OpenID 2.0
-     * §10.1), e.g. {@code 2026-05-28T12:34:56Z} followed by unique characters. We reject the
-     * assertion if that timestamp is older than {@link #NONCE_VALIDITY} or more than
-     * {@link #NONCE_CLOCK_SKEW} in the future, then consume the nonce via the single-use store so
-     * the same assertion cannot be replayed.
-     * The store entry must outlive the acceptance window, otherwise a nonce could be replayed after
-     * its entry expired but while it was still inside the window. It therefore lives for the full
-     * window ({@code NONCE_VALIDITY + NONCE_CLOCK_SKEW}).
+     * Steam's {@code openid.response_nonce} begins with an RFC 3339 UTC timestamp (OpenID 2.0 §10.1),
+     * e.g. {@code 2026-05-28T12:34:56Z}. Reject it if older than {@link #NONCE_VALIDITY} or beyond
+     * {@link #NONCE_CLOCK_SKEW} in the future, then consume it in the single-use store. The store entry
+     * lives for the full window ({@code NONCE_VALIDITY + NONCE_CLOCK_SKEW}) so it cannot expire while
+     * the nonce is still acceptable and let a replay through.
      */
     static void rejectStaleOrReplayedNonce(KeycloakSession session, String nonce) {
         Instant issued;
@@ -332,8 +324,7 @@ public class SteamIdentityProvider
         }
     }
 
-    // Reads a single query parameter from the signed return_to; we only ever need "state",
-    // so a hand-rolled parser is preferred over pulling in a URI-encoding dependency.
+    // Hand-rolled read of a single return_to query param (we only need "state"), to avoid a URI-encoding dependency.
     static String queryParam(URI uri, String name) {
         String query = uri.getRawQuery();
         if (query == null) {
