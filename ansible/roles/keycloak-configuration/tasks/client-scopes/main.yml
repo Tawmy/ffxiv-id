@@ -57,7 +57,7 @@
     attributes:
       include.in.token.scope: "true"
       display.on.consent.screen: "true"
-      consent.screen.text: "Steam ID"
+      consent.screen.text: "Steam ID, Persona, Avatar, and Profile URL"
 
     protocol_mappers:
       - name: steamId
@@ -71,6 +71,42 @@
           jsonType.label: String
           lightweight.claim: false
           user.attribute: steamId
+          userinfo.token.claim: true
+      - name: steamPersona
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          access.token.claim: false
+          claim.name: steam_persona
+          id.token.claim: true
+          introspection.token.claim: true
+          jsonType.label: String
+          lightweight.claim: false
+          user.attribute: steamPersona
+          userinfo.token.claim: true
+      - name: steamAvatar
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          access.token.claim: false
+          claim.name: steam_avatar
+          id.token.claim: true
+          introspection.token.claim: true
+          jsonType.label: String
+          lightweight.claim: false
+          user.attribute: steamAvatar
+          userinfo.token.claim: true
+      - name: steamProfileUrl
+        protocol: openid-connect
+        protocolMapper: oidc-usermodel-attribute-mapper
+        config:
+          access.token.claim: false
+          claim.name: steam_profile_url
+          id.token.claim: true
+          introspection.token.claim: true
+          jsonType.label: String
+          lightweight.claim: false
+          user.attribute: steamProfileUrl
           userinfo.token.claim: true
 
 - name: Create NetStone API client scope
