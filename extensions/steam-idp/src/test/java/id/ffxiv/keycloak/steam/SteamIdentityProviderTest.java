@@ -288,6 +288,50 @@ class SteamIdentityProviderTest {
         assertNull(runFetch("not json"));
     }
 
+    // --- usernameFromPersona -------------------------------------------------
+
+    private static final String STEAM_ID = "76561198031087104";
+
+    private static String usernameFor(String persona) {
+        return SteamIdentityProvider.usernameFromPersona(
+                new SteamIdentityProvider.SteamPlayer(persona, null, null), STEAM_ID);
+    }
+
+    @Test
+    void username_lowercasesPersona() {
+        assertEquals("tawmy", usernameFor("Tawmy"));
+    }
+
+    @Test
+    void username_replacesDisallowedCharactersWithUnderscore() {
+        assertEquals("cool_gamer", usernameFor("Cool Gamer!"));
+    }
+
+    @Test
+    void username_keepsAllowedSeparators() {
+        assertEquals("a.b-c_d", usernameFor("a.b-c_d"));
+    }
+
+    @Test
+    void username_trimsLeadingAndTrailingSeparators() {
+        assertEquals("bob", usernameFor("❤Bob❤"));
+    }
+
+    @Test
+    void username_fallsBackToSteamIdWhenPersonaHasNothingUsable() {
+        assertEquals(STEAM_ID, usernameFor("！？"));
+    }
+
+    @Test
+    void username_fallsBackToSteamIdWhenPersonaNull() {
+        assertEquals(STEAM_ID, usernameFor(null));
+    }
+
+    @Test
+    void username_fallsBackToSteamIdWhenPlayerNull() {
+        assertEquals(STEAM_ID, SteamIdentityProvider.usernameFromPersona(null, STEAM_ID));
+    }
+
     // --- updateBrokeredUser (re-sync on login) -------------------------------
 
     @Test

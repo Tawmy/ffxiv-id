@@ -38,6 +38,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -62,6 +63,10 @@ public class SteamIdentityProvider
             "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/";
     // Steam OpenID logs in individual accounts, whose SteamID64 is always 17 digits.
     private static final Pattern STEAM_ID_PATTERN = Pattern.compile("\\d{17}");
+
+    // Maps a Steam persona to a Keycloak-safe username: non-[a-z0-9._-] runs become "_", edges trimmed.
+    private static final Pattern USERNAME_DISALLOWED = Pattern.compile("[^a-z0-9._-]+");
+    private static final Pattern USERNAME_SEPARATOR_EDGES = Pattern.compile("^[._-]+|[._-]+$");
 
     // Steam's signature must cover every field we read from the response.
     private static final List<String> REQUIRED_SIGNED_FIELDS =
@@ -164,6 +169,24 @@ public class SteamIdentityProvider
         String steamId = claimedId.substring(STEAM_ID_PREFIX.length());
         if (!STEAM_ID_PATTERN.matcher(steamId).matches()) {
             throw new IdentityBrokerException("Invalid Steam claimed_id: " + claimedId);
+        }
+        return steamId;
+    }
+
+    /**
+     * Username assigned only when the account is first created. Prefers the human-readable persona,
+     * but it is mutable and may hold forbidden characters, so it is lowercased and reduced to
+     * {@code [a-z0-9._-]}; falls back to the SteamID when nothing usable remains. Later logins match
+     * on the SteamID link and keep the username; duplicates are handled by Keycloak's first-broker-login flow.
+     */
+    static String usernameFromPersona(SteamPlayer player, String steamId) {
+        String persona = player == null ? null : player.personaName();
+        if (persona != null) {
+            String sanitized = USERNAME_DISALLOWED.matcher(persona.toLowerCase(Locale.ROOT)).replaceAll("_");
+            sanitized = USERNAME_SEPARATOR_EDGES.matcher(sanitized).replaceAll("");
+            if (!sanitized.isBlank()) {
+                return sanitized;
+            }
         }
         return steamId;
     }
@@ -381,10 +404,8 @@ public class SteamIdentityProvider
 
                 String steamId = extractSteamId(params.getFirst("openid.claimed_id"));
 
+                // The SteamID64 is the only stable, unique identifier Steam exposes, so it's used as the federation link.
                 BrokeredIdentityContext identity = new BrokeredIdentityContext(steamId, config);
-                // The SteamID64 is the only stable, unique identifier Steam exposes; persona names
-                // are mutable and non-unique, so the SteamID stays the Keycloak username.
-                identity.setUsername(steamId);
                 identity.setUserAttribute("steamId", steamId);
 
                 SteamPlayer player = fetchPlayerSummary(session, provider.getConfig().getApiKey(), steamId);
@@ -399,6 +420,9 @@ public class SteamIdentityProvider
                         identity.setUserAttribute("steamProfileUrl", player.profileUrl());
                     }
                 }
+
+                // Human-readable username for first account creation only; later logins keep it.
+                identity.setUsername(usernameFromPersona(player, steamId));
 
                 identity.setIdp(provider);
                 identity.setAuthenticationSession(authSession);
