@@ -15,6 +15,7 @@
     <!-- Add a new extension by creating a sibling module directory and listing it here. -->
     <modules>
         <module>steam-idp</module>
+        <module>webauthn-auto-label</module>
     </modules>
 
     <properties>
