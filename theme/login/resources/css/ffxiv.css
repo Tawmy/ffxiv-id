@@ -13,6 +13,14 @@
   --color-xiv-frame-l: #9b8358;
 }
 
+/* taken from Keycloak styles */
+.pf-v5-c-login__container {
+  grid-template-columns: 34rem;
+  grid-template-areas:
+    "header"
+    "main";
+}
+
 .pf-v5-c-login__main {
   --padding: 0.75rem;
   padding: var(--padding) var(--padding) 0 var(--padding);
