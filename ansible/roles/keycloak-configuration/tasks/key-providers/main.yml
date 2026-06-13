@@ -77,7 +77,7 @@
     name: rsa-enc-generated
     state: absent
     parent_id: "{{ item }}"
-    provider_id: rsa-generated
+    provider_id: rsa-enc-generated
     provider_type: org.keycloak.keys.KeyProvider
   loop: "{{ realms_for_key_providers }}"
   loop_control:
