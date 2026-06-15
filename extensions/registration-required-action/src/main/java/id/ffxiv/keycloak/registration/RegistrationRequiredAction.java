@@ -6,6 +6,7 @@ import org.keycloak.Config;
 import org.keycloak.authentication.FormAction;
 import org.keycloak.authentication.FormActionFactory;
 import org.keycloak.authentication.FormContext;
+import org.keycloak.authentication.RequiredActionProvider;
 import org.keycloak.authentication.ValidationContext;
 import org.keycloak.forms.login.LoginFormsProvider;
 import org.keycloak.models.AuthenticationExecutionModel;
@@ -16,6 +17,7 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.UserModel;
 import org.keycloak.provider.ConfiguredProvider;
 import org.keycloak.provider.ProviderConfigProperty;
+import org.keycloak.provider.ProviderFactory;
 
 /**
  * Registration form action that flags the freshly created user with a configurable required
@@ -38,6 +40,8 @@ public class RegistrationRequiredAction implements FormAction, FormActionFactory
             AuthenticationExecutionModel.Requirement.REQUIRED,
             AuthenticationExecutionModel.Requirement.DISABLED
     };
+
+    private volatile List<String> requiredActionOptions = List.of();
 
     @Override
     public void buildPage(FormContext context, LoginFormsProvider form) {
@@ -124,10 +128,11 @@ public class RegistrationRequiredAction implements FormAction, FormActionFactory
     public List<ProviderConfigProperty> getConfigProperties() {
         ProviderConfigProperty requiredAction = new ProviderConfigProperty();
         requiredAction.setName(REQUIRED_ACTION);
-        requiredAction.setLabel("Required action alias");
-        requiredAction.setType(ProviderConfigProperty.STRING_TYPE);
-        requiredAction.setHelpText("Alias of the required action to assign to the user "
-                + "(e.g. webauthn-register-passwordless, CONFIGURE_TOTP).");
+        requiredAction.setLabel("Required action");
+        requiredAction.setType(ProviderConfigProperty.LIST_TYPE);
+        requiredAction.setOptions(requiredActionOptions);
+        requiredAction.setHelpText("Required action to assign to users who complete the "
+                + "registration form (e.g. webauthn-register-passwordless, CONFIGURE_TOTP).");
         return List.of(requiredAction);
     }
 
@@ -142,6 +147,10 @@ public class RegistrationRequiredAction implements FormAction, FormActionFactory
 
     @Override
     public void postInit(KeycloakSessionFactory factory) {
+        requiredActionOptions = factory.getProviderFactoriesStream(RequiredActionProvider.class)
+                .map(ProviderFactory::getId)
+                .sorted()
+                .toList();
     }
 
     @Override
