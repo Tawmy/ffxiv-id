@@ -29,5 +29,5 @@
       - alias: "webauthn-register-passwordless"
         name: "Webauthn Register Passwordless"
         enabled: true
-        defaultAction: true
+        defaultAction: false
     state: present

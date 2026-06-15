@@ -16,6 +16,7 @@
     <modules>
         <module>steam-idp</module>
         <module>webauthn-auto-label</module>
+        <module>registration-required-action</module>
     </modules>
 
     <properties>
