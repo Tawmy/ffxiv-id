@@ -1,0 +1,90 @@
+---
+- name: Define first broker login flow alias
+  ansible.builtin.set_fact:
+    first_broker_login_flow_alias: first-broker-login-reauth-first
+
+- name: Reset first broker login flow binding
+  community.general.keycloak_realm:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    first_broker_login_flow: first broker login
+
+- name: Delete existing custom first broker login flow if exists
+  community.general.keycloak_authentication:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    alias: "{{ first_broker_login_flow_alias }}"
+    state: absent
+
+- name: Add custom first broker login flow
+  community.general.keycloak_authentication:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    alias: "{{ first_broker_login_flow_alias }}"
+    copyFrom: "{{ empty_flow_alias }}"
+    force: true
+    authenticationExecutions:
+      - providerId: "idp-review-profile"
+        requirement: "REQUIRED"
+        authenticationConfig:
+          alias: "fbl-reauth-first-review-profile-config"
+          config:
+            update.profile.on.first.login: "on"
+
+      - displayName: "User creation or linking (reauth-first)"
+        requirement: "REQUIRED"
+      - providerId: "idp-create-user-if-unique"
+        requirement: "ALTERNATIVE"
+        flowAlias: "User creation or linking (reauth-first)"
+        authenticationConfig:
+          alias: "fbl-reauth-first-create-unique-user-config"
+          config:
+            require.password.update.after.registration: "false"
+
+      - displayName: "Handle Existing Account (reauth-first)"
+        requirement: "ALTERNATIVE"
+        flowAlias: "User creation or linking (reauth-first)"
+      - providerId: "idp-confirm-link"
+        requirement: "REQUIRED"
+        flowAlias: "Handle Existing Account (reauth-first)"
+
+      - displayName: "Account verification options (reauth-first)"
+        requirement: "REQUIRED"
+        flowAlias: "Handle Existing Account (reauth-first)"
+
+      - displayName: "Verify Existing Account by Re-authentication (reauth-first)"
+        requirement: "ALTERNATIVE"
+        flowAlias: "Account verification options (reauth-first)"
+      - providerId: "idp-username-password-form"
+        requirement: "REQUIRED"
+        flowAlias: "Verify Existing Account by Re-authentication (reauth-first)"
+
+      - providerId: "idp-email-verification"
+        requirement: "ALTERNATIVE"
+        flowAlias: "Account verification options (reauth-first)"
+
+- name: Bind first broker login flow to realm
+  community.general.keycloak_realm:
+    auth_keycloak_url: "{{ keycloak_url }}"
+    auth_realm: master
+    auth_client_id: "{{ keycloak_ansible_client_id }}"
+    auth_client_secret: "{{ vault_keycloak_ansible_client_secret }}"
+    validate_certs: "{{ validate_certs | default(true) }}"
+
+    realm: "{{ keycloak_realm_name }}"
+    firstBrokerLoginFlow: "{{ first_broker_login_flow_alias }}"
