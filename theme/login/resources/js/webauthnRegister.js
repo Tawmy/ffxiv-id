@@ -1,5 +1,5 @@
 /*
- * Copied from Keycloak 26.6.3 (theme/base/login/resources/js/webauthnRegister.js)
+ * Copied from Keycloak 26.6.4 (theme/base/login/resources/js/webauthnRegister.js)
  * with one change: the window.prompt asking the user to label the passkey is
  * removed; the server assigns the label from the authenticator provider name.
  * Re-sync with upstream when upgrading Keycloak.
