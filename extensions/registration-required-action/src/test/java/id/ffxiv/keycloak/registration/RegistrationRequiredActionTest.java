@@ -1,5 +1,6 @@
 package id.ffxiv.keycloak.registration;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,6 +33,7 @@ class RegistrationRequiredActionTest {
         FormContext context = mock(FormContext.class);
         when(context.getAuthenticatorConfig()).thenReturn(config(Map.of(RegistrationRequiredAction.REQUIRED_ACTION, ALIAS)));
         when(context.getUser()).thenReturn(user);
+        when(context.getAuthenticationSession()).thenReturn(authSession);
 
         action.success(context);
 
@@ -62,5 +64,29 @@ class RegistrationRequiredActionTest {
         action.success(context);
 
         verify(user, never()).addRequiredAction(ALIAS);
+    }
+
+    @Test
+    void doesNothingWhenConfiguredValueBlank() {
+        UserModel user = mock(UserModel.class);
+        FormContext context = mock(FormContext.class);
+        when(context.getAuthenticatorConfig()).thenReturn(config(Map.of(RegistrationRequiredAction.REQUIRED_ACTION, "   ")));
+        when(context.getUser()).thenReturn(user);
+
+        action.success(context);
+
+        verify(user, never()).addRequiredAction(anyString());
+    }
+
+    @Test
+    void trimsConfiguredRequiredAction() {
+        UserModel user = mock(UserModel.class);
+        FormContext context = mock(FormContext.class);
+        when(context.getAuthenticatorConfig()).thenReturn(config(Map.of(RegistrationRequiredAction.REQUIRED_ACTION, "  " + ALIAS + "  ")));
+        when(context.getUser()).thenReturn(user);
+
+        action.success(context);
+
+        verify(user).addRequiredAction(ALIAS);
     }
 }

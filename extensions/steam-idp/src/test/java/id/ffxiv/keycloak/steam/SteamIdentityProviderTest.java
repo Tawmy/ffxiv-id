@@ -2,19 +2,29 @@ package id.ffxiv.keycloak.steam;
 
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.Test;
+import org.keycloak.broker.provider.AuthenticationRequest;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityBrokerException;
+import org.keycloak.broker.provider.UserAuthenticationIdentityProvider;
+import org.keycloak.broker.provider.util.IdentityBrokerState;
+import org.keycloak.events.EventBuilder;
 import org.keycloak.http.simple.SimpleHttp;
 import org.keycloak.http.simple.SimpleHttpRequest;
 import org.keycloak.models.IdentityProviderSyncMode;
+import org.keycloak.models.KeycloakContext;
 import org.keycloak.models.KeycloakSession;
+import org.keycloak.models.KeycloakUriInfo;
 import org.keycloak.models.RealmModel;
 import org.keycloak.models.SingleUseObjectProvider;
 import org.keycloak.models.UserModel;
+import org.keycloak.sessions.AuthenticationSessionModel;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
+import java.io.IOException;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -43,6 +53,31 @@ class SteamIdentityProviderTest {
     private static final String CALLBACK = "https://id.ffxiv.id/realms/ffxiv/broker/steam/endpoint";
     private static final String SIGNED_FIELDS =
             "signed,op_endpoint,claimed_id,identity,return_to,response_nonce,assoc_handle";
+
+    // --- performLogin ---------------------------------------------------------
+
+    @Test
+    void performLogin_redirectsToSteamCheckidSetup() {
+        AuthenticationRequest request = mock(AuthenticationRequest.class);
+        IdentityBrokerState state = mock(IdentityBrokerState.class);
+        when(request.getRedirectUri()).thenReturn(CALLBACK);
+        when(request.getState()).thenReturn(state);
+        when(state.getEncoded()).thenReturn("state-123");
+
+        Response response = providerWithSyncMode(IdentityProviderSyncMode.IMPORT).performLogin(request);
+
+        assertEquals(Response.Status.SEE_OTHER.getStatusCode(), response.getStatus());
+        URI location = response.getLocation();
+        assertTrue(location.toString().startsWith(STEAM_OPENID_URL + "?"));
+        assertEquals("http://specs.openid.net/auth/2.0", SteamIdentityProvider.queryParam(location, "openid.ns"));
+        assertEquals("checkid_setup", SteamIdentityProvider.queryParam(location, "openid.mode"));
+        assertEquals(CALLBACK + "?state=state-123", SteamIdentityProvider.queryParam(location, "openid.return_to"));
+        assertEquals("https://id.ffxiv.id/", SteamIdentityProvider.queryParam(location, "openid.realm"));
+        assertEquals("http://specs.openid.net/auth/2.0/identifier_select",
+                SteamIdentityProvider.queryParam(location, "openid.identity"));
+        assertEquals("http://specs.openid.net/auth/2.0/identifier_select",
+                SteamIdentityProvider.queryParam(location, "openid.claimed_id"));
+    }
 
     // --- extractSteamId ------------------------------------------------------
 
@@ -210,6 +245,22 @@ class SteamIdentityProviderTest {
                 () -> SteamIdentityProvider.validateSignedAssertion(sessionAcceptingNonce(), uriInfo(params), "different-state"));
     }
 
+    @Test
+    void validate_rejectsMissingResponseNonce() {
+        MultivaluedMap<String, String> params = validParams("state-123", nonceAt(Instant.now()));
+        params.remove("openid.response_nonce");
+        assertThrows(IdentityBrokerException.class,
+                () -> SteamIdentityProvider.validateSignedAssertion(sessionAcceptingNonce(), uriInfo(params), "state-123"));
+    }
+
+    @Test
+    void validate_rejectsMalformedReturnTo() {
+        MultivaluedMap<String, String> params = validParams("state-123", nonceAt(Instant.now()));
+        params.putSingle("openid.return_to", "https://id.ffxiv.id/broken path?state=state-123");
+        assertThrows(IdentityBrokerException.class,
+                () -> SteamIdentityProvider.validateSignedAssertion(sessionAcceptingNonce(), uriInfo(params), "state-123"));
+    }
+
     // --- verifyWithSteam -----------------------------------------------------
 
     @Test
@@ -288,6 +339,19 @@ class SteamIdentityProviderTest {
         assertNull(runFetch("not json"));
     }
 
+    @Test
+    void fetchPlayer_treatsBlankFieldsAsMissing() throws Exception {
+        SteamIdentityProvider.SteamPlayer player = runFetch("""
+                {"response":{"players":[{
+                  "personaname":"",
+                  "avatarfull":"",
+                  "avatarmedium":"https://cdn.example/avatar_medium.jpg"
+                }]}}""");
+        assertNull(player.personaName());
+        assertEquals("https://cdn.example/avatar_medium.jpg", player.avatarUrl());
+        assertNull(player.profileUrl());
+    }
+
     // --- usernameFromPersona -------------------------------------------------
 
     private static final String STEAM_ID = "76561198031087104";
@@ -362,7 +426,151 @@ class SteamIdentityProviderTest {
         verify(user, never()).setAttribute(anyString(), org.mockito.ArgumentMatchers.anyList());
     }
 
+    // --- Endpoint.authResponse -------------------------------------------------
+
+    @Test
+    void authResponse_errorsWhenStateMissing() {
+        SteamEndpoint steam = steamEndpoint(new MultivaluedHashMap<>());
+
+        steam.endpoint().authResponse(null, null, null, null);
+
+        verify(steam.callback()).error(steam.config(), "Missing state parameter");
+    }
+
+    @Test
+    void authResponse_reportsCancellation() {
+        MultivaluedMap<String, String> params = new MultivaluedHashMap<>();
+        params.putSingle("openid.mode", "cancel");
+        SteamEndpoint steam = steamEndpoint(params);
+
+        steam.endpoint().authResponse("state-123", null, null, null);
+
+        verify(steam.callback()).cancelled(steam.config());
+    }
+
+    @Test
+    void authResponse_errorsOnUnexpectedMode() {
+        MultivaluedMap<String, String> params = new MultivaluedHashMap<>();
+        params.putSingle("openid.mode", "setup_needed");
+        SteamEndpoint steam = steamEndpoint(params);
+
+        steam.endpoint().authResponse("state-123", null, null, null);
+
+        verify(steam.callback()).error(steam.config(), "Unexpected OpenID response from Steam");
+    }
+
+    @Test
+    void authResponse_errorsWhenSteamRejectsAssertion() throws Exception {
+        SteamEndpoint steam = steamEndpoint(steamAssertionParams("state-123"));
+
+        withSteamVerification(steam.session(), "is_valid:false",
+                () -> steam.endpoint().authResponse("state-123", null, null, null));
+
+        verify(steam.callback()).error(steam.config(), "Steam rejected the OpenID assertion");
+    }
+
+    @Test
+    void authResponse_errorsWhenAssertionFailsLocalValidation() throws Exception {
+        MultivaluedMap<String, String> params = steamAssertionParams("state-123");
+        params.putSingle("openid.op_endpoint", "https://evil.example/openid/login");
+        SteamEndpoint steam = steamEndpoint(params);
+
+        withSteamVerification(steam.session(), "is_valid:true",
+                () -> steam.endpoint().authResponse("state-123", null, null, null));
+
+        verify(steam.callback()).error(steam.config(), "Steam OpenID verification failed");
+    }
+
+    @Test
+    void authResponse_errorsWhenSteamUnreachable() throws Exception {
+        SteamEndpoint steam = steamEndpoint(steamAssertionParams("state-123"));
+
+        withSteamVerificationFailing(steam.session(),
+                () -> steam.endpoint().authResponse("state-123", null, null, null));
+
+        verify(steam.callback()).error(steam.config(), "Could not contact Steam to verify the assertion");
+    }
+
+    @Test
+    void authResponse_authenticatesValidAssertion() throws Exception {
+        SteamEndpoint steam = steamEndpoint(steamAssertionParams("state-123"));
+
+        withSteamVerification(steam.session(), "ns:http://specs.openid.net/auth/2.0\nis_valid:true\n",
+                () -> steam.endpoint().authResponse("state-123", null, null, null));
+
+        verify(steam.session().getContext()).setAuthenticationSession(steam.authSession());
+
+        ArgumentCaptor<BrokeredIdentityContext> identity = ArgumentCaptor.forClass(BrokeredIdentityContext.class);
+        verify(steam.callback()).authenticated(identity.capture());
+        assertEquals(STEAM_ID, identity.getValue().getId());
+        // No API key is configured, so no profile fetch happens and the username falls back to the SteamID.
+        assertEquals(STEAM_ID, identity.getValue().getUsername());
+        assertEquals(List.of(STEAM_ID), identity.getValue().getAttributes().get("steamId"));
+    }
+
     // --- helpers -------------------------------------------------------------
+
+    private record SteamEndpoint(SteamIdentityProvider.Endpoint endpoint,
+                                 UserAuthenticationIdentityProvider.AuthenticationCallback callback,
+                                 SteamIdentityProviderConfig config,
+                                 AuthenticationSessionModel authSession,
+                                 KeycloakSession session) {
+    }
+
+    private static SteamEndpoint steamEndpoint(MultivaluedMap<String, String> params) {
+        KeycloakSession session = sessionAcceptingNonce();
+        KeycloakContext context = mock(KeycloakContext.class);
+        when(session.getContext()).thenReturn(context);
+        KeycloakUriInfo uri = mock(KeycloakUriInfo.class);
+        when(uri.getQueryParameters()).thenReturn(params);
+        when(uri.getAbsolutePath()).thenReturn(URI.create(CALLBACK));
+        when(context.getUri()).thenReturn(uri);
+
+        SteamIdentityProviderConfig config = new SteamIdentityProviderConfig();
+        config.setEnabled(true);
+        SteamIdentityProvider provider = new SteamIdentityProvider(session, config);
+
+        UserAuthenticationIdentityProvider.AuthenticationCallback callback =
+                mock(UserAuthenticationIdentityProvider.AuthenticationCallback.class);
+        AuthenticationSessionModel authSession = mock(AuthenticationSessionModel.class);
+        when(callback.getAndVerifyAuthenticationSession("state-123")).thenReturn(authSession);
+
+        SteamIdentityProvider.Endpoint endpoint = new SteamIdentityProvider.Endpoint(
+                callback, mock(RealmModel.class), mock(EventBuilder.class), provider);
+        return new SteamEndpoint(endpoint, callback, config, authSession, session);
+    }
+
+    private static MultivaluedMap<String, String> steamAssertionParams(String state) {
+        MultivaluedMap<String, String> params = validParams(state, nonceAt(Instant.now()));
+        params.putSingle("openid.mode", "id_res");
+        params.putSingle("openid.claimed_id", STEAM_ID_PREFIX + STEAM_ID);
+        return params;
+    }
+
+    private static void withSteamVerification(KeycloakSession session, String responseBody, Runnable action)
+            throws Exception {
+        SimpleHttp http = mock(SimpleHttp.class);
+        SimpleHttpRequest request = mock(SimpleHttpRequest.class);
+        when(request.asString()).thenReturn(responseBody);
+
+        try (MockedStatic<SimpleHttp> simpleHttp = mockStatic(SimpleHttp.class)) {
+            simpleHttp.when(() -> SimpleHttp.create(session)).thenReturn(http);
+            when(http.doPost(STEAM_OPENID_URL)).thenReturn(request);
+            action.run();
+        }
+    }
+
+    private static void withSteamVerificationFailing(KeycloakSession session, Runnable action) throws Exception {
+        SimpleHttp http = mock(SimpleHttp.class);
+        SimpleHttpRequest request = mock(SimpleHttpRequest.class);
+        when(request.asString()).thenThrow(new IOException("Steam unreachable"));
+
+        try (MockedStatic<SimpleHttp> simpleHttp = mockStatic(SimpleHttp.class)) {
+            simpleHttp.when(() -> SimpleHttp.create(session)).thenReturn(http);
+            when(http.doPost(STEAM_OPENID_URL)).thenReturn(request);
+            action.run();
+        }
+    }
 
     private static SteamIdentityProvider providerWithSyncMode(IdentityProviderSyncMode mode) {
         SteamIdentityProviderConfig config = new SteamIdentityProviderConfig();

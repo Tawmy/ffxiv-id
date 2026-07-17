@@ -25,6 +25,8 @@
         <keycloak.version>26.7.0</keycloak.version>
         <jakarta.ws.rs.version>3.1.0</jakarta.ws.rs.version>
         <jboss.logging.version>3.6.2.Final</jboss.logging.version>
+        <!-- Must implement the Jakarta REST version matching ${jakarta.ws.rs.version}. -->
+        <resteasy.version>6.2.12.Final</resteasy.version>
         <junit.version>6.1.2</junit.version>
         <mockito.version>5.23.0</mockito.version>
         <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
@@ -63,6 +65,14 @@
                 <artifactId>jboss-logging</artifactId>
                 <version>${jboss.logging.version}</version>
                 <scope>provided</scope>
+            </dependency>
+            <!-- Test-only JAX-RS RuntimeDelegate implementation so code under test can build
+                 Response/UriBuilder objects; at runtime Keycloak's own RESTEasy provides this. -->
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-core</artifactId>
+                <version>${resteasy.version}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
