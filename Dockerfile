@@ -1,4 +1,4 @@
-ARG KEYCLOAK_VERSION=26.6.4
+ARG KEYCLOAK_VERSION=26.7.0
 
 FROM maven:3-eclipse-temurin-21 AS extensions
 COPY extensions /build
