@@ -10,11 +10,11 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>keycloak-steam-idp</artifactId>
+    <artifactId>keycloak-registration-required-action</artifactId>
     <packaging>jar</packaging>
 
-    <name>Keycloak Steam Identity Provider</name>
-    <description>Steam (OpenID 2.0) identity provider for Keycloak.</description>
+    <name>Keycloak Registration Required Action</name>
+    <description>Assigns a configurable required action only to users who complete the registration form.</description>
 
     <dependencies>
         <dependency>
@@ -28,18 +28,6 @@
         <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-services</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jboss.resteasy</groupId>
-            <artifactId>resteasy-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

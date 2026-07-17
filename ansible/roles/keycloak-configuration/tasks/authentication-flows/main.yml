@@ -7,3 +7,6 @@
 
 - name: Configure registration flow
   ansible.builtin.import_tasks: registration.yml
+
+- name: Configure first broker login flow
+  ansible.builtin.import_tasks: first-broker-login.yml

@@ -46,6 +46,13 @@
       - providerId: "registration-user-creation"
         requirement: "REQUIRED"
         flowAlias: "registration-passkey-only-forms"
+      - providerId: "registration-required-action"
+        requirement: "REQUIRED"
+        flowAlias: "registration-passkey-only-forms"
+        authenticationConfig:
+          alias: "registration-require-passkey"
+          config:
+            required_action: "webauthn-register-passwordless"
 
 - name: Bind registration flow to realm
   community.general.keycloak_realm:

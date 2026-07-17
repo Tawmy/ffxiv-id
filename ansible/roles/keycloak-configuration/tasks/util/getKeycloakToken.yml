@@ -1,7 +1,11 @@
 ---
+- name: Get current epoch time
+  ansible.builtin.set_fact:
+    current_epoch: "{{ now(fmt='%s') | int }}"
+
 - name: Check if token exists and is still valid
   ansible.builtin.set_fact:
-    need_new_token: "{{ (keycloak_token is not defined) or (token_expiry is not defined) or (token_expiry | int <= ansible_date_time.epoch | int) }}"
+    need_new_token: "{{ (keycloak_token is not defined) or (token_expiry is not defined) or (token_expiry | int <= current_epoch | int) }}"
 
 - name: Get new access token if needed
   ansible.builtin.uri:
@@ -16,9 +20,11 @@
     return_content: true
   register: token_response
   when: need_new_token
+  no_log: true
 
 - name: Set token and expiry
   when: need_new_token
   ansible.builtin.set_fact:
     keycloak_token: "{{ token_response.json.access_token if need_new_token else keycloak_token }}"
-    token_expiry: "{{ (ansible_date_time.epoch | int + token_response.json.expires_in | int) if need_new_token else token_expiry }}"
+    token_expiry: "{{ (current_epoch | int + token_response.json.expires_in | int) if need_new_token else token_expiry }}"
+  no_log: true
