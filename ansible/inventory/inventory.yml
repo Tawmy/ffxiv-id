@@ -13,5 +13,5 @@ all:
           ansible_connection: ssh
     prod:
       hosts:
-        ffxiv.id:
+        new.ffxiv.id:
           ansible_connection: ssh

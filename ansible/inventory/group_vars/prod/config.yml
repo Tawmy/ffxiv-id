@@ -1,4 +1,4 @@
-keycloak_url: https://ffxiv.id
+keycloak_url: https://new.ffxiv.id
 passkey_relying_party_entity_name: FFXIV ID
 passkey_relying_party_id: ffxiv.id
 
