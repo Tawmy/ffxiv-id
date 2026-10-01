@@ -1,5 +1,5 @@
 /*
- * Copied from Keycloak 26.7.4 (theme/base/login/resources/js/webauthnRegister.js)
+ * Copied from Keycloak 26.8.0 (theme/base/login/resources/js/webauthnRegister.js)
  * with one change: the window.prompt asking the user to label the passkey is
  * removed; the server assigns the label from the authenticator provider name.
  * Re-sync with upstream when upgrading Keycloak.
@@ -10,7 +10,7 @@ export async function registerByWebAuthn(input) {
 
     // Check if WebAuthn is supported by this browser
     if (!window.PublicKeyCredential) {
-        returnFailure(input.errmsg);
+        returnFailure("WebAuthnUnsupportedBrowser");
         return;
     }
 
