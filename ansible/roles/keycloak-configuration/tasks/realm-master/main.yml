@@ -42,3 +42,8 @@
     # Tokens
     default_signature_algorithm: ES256
     revoke_refresh_token: true
+
+    # Authentication Policies
+    ## Webauthn Passwordless Policy
+    web_authn_policy_passwordless_rp_entity_name: "{{ passkey_relying_party_entity_name | default('keycloak') }} Admin"
+    web_authn_policy_passwordless_passkeys_enabled: true

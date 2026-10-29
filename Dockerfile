@@ -1,4 +1,4 @@
-ARG KEYCLOAK_VERSION=26.7.4
+ARG KEYCLOAK_VERSION=26.8.1
 
 FROM maven:3-eclipse-temurin-21 AS extensions
 COPY extensions /build
@@ -8,7 +8,7 @@ RUN mvn -B -q -DskipTests package
 FROM quay.io/keycloak/keycloak:$KEYCLOAK_VERSION AS builder
 ENV KC_DB=postgres
 ENV KC_HEALTH_ENABLED=true
-ENV KC_FEATURES_DISABLED=ciba,device-flow,kerberos
+ENV KC_FEATURES_DISABLED=ciba,device-flow,kerberos,scim-api
 COPY --chown=keycloak:keycloak theme /opt/keycloak/themes/ffxiv
 COPY --from=extensions /build/steam-idp/target/keycloak-steam-idp.jar /opt/keycloak/providers/
 COPY --from=extensions /build/webauthn-auto-label/target/keycloak-webauthn-auto-label.jar /opt/keycloak/providers/

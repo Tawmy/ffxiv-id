@@ -18,6 +18,7 @@
     redirect_uris: "{{ item.redirect_uris | default(['']) }}"
     web_origins: "{{ item.web_origins | default(['']) }}"
     consent_required: "{{ item.consent_required | default(true) }}"
+    full_scope_allowed: false
     attributes:
       pkce.code.challenge.method: "S256"
       par.require: "{{ item.pushed_authorization_requests | default(true) }}"
